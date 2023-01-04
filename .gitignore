@@ -1,4 +1,6 @@
 .idea
 **.pth
-**data/**
+data
 venv
+logs
+**__pycache__

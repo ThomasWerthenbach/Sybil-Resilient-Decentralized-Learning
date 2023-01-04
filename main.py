@@ -3,6 +3,7 @@
 #    - https://ieeexplore.ieee.org/abstract/document/8885214
 #    - Thought: random walk protocol is executed after each round, as the reputation values have changed.
 #    - Somehow we need reciprocity in MeritRank or incentives for edge creation
+#    ---- maybe we should do it simple? Broadcast your new edge weights every round. Don't care about package loss. ----
 #    - MeritRank
 #       - Reciprocity?
 #       - Incentives for accepting new strangers? really necessary? benevolent users want to increase overall accuracy

@@ -7,11 +7,22 @@ import torch.nn as nn
 
 from ml.ml_settings import MLSettings
 
+from sklearn.metrics import f1_score
+
+from ml.models.model import Model
+
+
+#todo
+# 1. evaluate models (get F1 scores). Requires 2
+# 2. Distribute data among peers. Requires 3
+# 3. Overlay network messages can be sent to peers. Requires 4
+# 4. send models to peers
+# 5. how to perform transfer learning
 
 class BristleIntegrator:
     def __init__(self,
-                 own_model: nn.Module,
-                 models: Tuple[nn.Module],
+                 own_model: Model,
+                 models: Tuple[Model],
                  dataset,
                  classes: List[int],
                  n_classes: int,
@@ -30,7 +41,7 @@ class BristleIntegrator:
         # Compute the performance of each model
         performances: List[List[float]] = []
 
-        models: List[nn.Module] = list(self.models)
+        models: List[Model] = list(self.models)
         models.append(self.own_model)
 
         # calculate performances
@@ -67,5 +78,9 @@ class BristleIntegrator:
     def sigmoid_foreign(self, score: float, certainty: float) -> float:
         return max(0.0, self.settings.foreign_w1 / (1 + math.exp(-score / 100.0)) - self.settings.foreign_w2) * certainty
 
-    def evaluate_model(self, model, c) -> float:
-        pass
+    def evaluate_model(self, model: Model, c) -> float:
+        # todo get all data for a specific class -> take this into account when building the datasetdistributor
+        data = None
+        f1_score = f1_score(labels.data, preds)
+
+

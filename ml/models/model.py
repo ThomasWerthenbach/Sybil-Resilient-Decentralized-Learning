@@ -19,5 +19,8 @@ class Model(nn.Module):
         elif model_name.lower() == 'fashionmnist':
             from ml.models.FashionMNIST import FashionMNISTCNN
             return FashionMNISTCNN
+        elif model_name.lower() == 'emnist':
+            from ml.models.EMNIST import EMNIST
+            return EMNIST
         else:
             raise RuntimeError("Unknown model %s" % model_name)

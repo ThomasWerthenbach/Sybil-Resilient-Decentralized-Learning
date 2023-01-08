@@ -5,11 +5,10 @@ from ipv8.lazy_community import lazy_wrapper
 from ipv8.peer import Peer
 
 from community.introduction_msg import IntroductionMsg
-from ml.ml_peer import MLPeer
 from community.peer_manager import PeerManager
-from community.settings import Settings
 from community.recommendations_msg import RecommendationsMsg
 from community.weights_msg import WeightsMsg
+from experiment_settings.settings import Settings
 
 
 class MLCommunity(Community):
@@ -25,8 +24,16 @@ class MLCommunity(Community):
         self.peer_manager = PeerManager()
         self.me = None
 
+    def started(self):
+        pass
+
     def start(self, settings: Settings, peer_id: int):
+        from ml.ml_peer import MLPeer
         self.me = MLPeer(peer_id, settings)
+        print(peer_id)
+        self.register_task("start_lifecycle_" + str(peer_id), self.start_lifecycle, delay=0)
+
+    async def start_lifecycle(self):
         self.me.start_lifecycle(self)
 
     async def send_introductions(self, weights: Dict[any, float], data: any):
@@ -40,7 +47,7 @@ class MLCommunity(Community):
         Only used by Repple
         """
 
-    async def send_model_to_peers(self, model: List[List[str]]):
+    def send_model_to_peers(self, model: List[List[str]]):
         """
         Used to send models to peers
         :param model: Stringified weights of the output layer
@@ -56,7 +63,7 @@ class MLCommunity(Community):
     @lazy_wrapper(RecommendationsMsg)
     def on_recommendations(self, peer, payload: RecommendationsMsg):
         # todo store weights in peer manager
-        print("received weights from", peer, payload.weights)
+        print("received recommendations from", peer, payload.weights)
 
     @lazy_wrapper(WeightsMsg)
     def on_weights(self, peer, payload: WeightsMsg):

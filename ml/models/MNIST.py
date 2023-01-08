@@ -19,7 +19,7 @@ class MNIST(Model):
     def get_output_layer_weights(self) -> Tensor:
         return self.fc1.weight
 
-    def prepare_model_for_transfer_learning(self, num_classes: int):
+    def prepare_for_transfer_learning(self, num_classes: int):
         for p in self.parameters():
             p.requires_grad = False
         self.fc1 = nn.Linear(10240, num_classes, bias=False)

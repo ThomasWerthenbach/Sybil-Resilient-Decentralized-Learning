@@ -1,6 +1,7 @@
 from community.ml_community import MLCommunity
-from community.settings import Settings
-from ml.executor.executor import Executor, Algorithm
+from experiment_settings.algorithms import Algorithm
+from experiment_settings.settings import Settings
+from ml.executor.executor import Executor
 
 
 class MLPeer:
@@ -29,27 +30,31 @@ class MLPeer:
         """
         Method called by ipv8 overlay when the peer is ready to start.
         """
+        print(self.peer_id, "started")
         executor: Executor = Executor.get_executor_class(self.settings.algorithm)(self.settings)
 
-        executor.prepare_model()
         executor.load_data(self.peer_id, self.settings.total_peers, self.settings.non_iid)
+        executor.prepare_model()
 
         # todo: datadistributor. should be able to get a sample to send in introductions (if still necessary in Repple)
 
         for _ in range(self.settings.max_rounds):
+            print("start trainging")
             executor.train()
+            print("finished training")
 
             weights = executor.get_model_weights()
-            # Stringify all floats
-            weights = list(map(lambda x: list(map(str, x)), weights))
+            print("sending weights")
             community.send_model_to_peers(weights)
-
+            print("sent weights")
             if self.settings.algorithm == Algorithm.REPPLE:
                 # todo: send introduction requests
                 # todo: process received introduction requests, based on stranger policy
                 pass
-
+            print("start integrating")
             other_models = community.get_other_models()
             if len(other_models) > 0:
                 prioritized_models = executor.prioritize_other_models(other_models)
                 executor.integrate_models(prioritized_models)
+
+            print("done integrating")

@@ -1,17 +1,9 @@
 from abc import ABC, abstractmethod
-from enum import Enum
 from typing import Type, List
 
 from torch import nn, Tensor
 
-
-class ModelType(Enum):
-    """
-    Defines the implemented machine learning models
-    """
-    MNIST = 'mnist'
-    FashionMNIST = 'fashionmnist'
-    EMNIST = 'emnist'
+from experiment_settings.model_types import ModelType
 
 
 class Model(nn.Module, ABC):
@@ -37,9 +29,9 @@ class Model(nn.Module, ABC):
             raise RuntimeError("Unknown model %s" % model_name)
 
     @abstractmethod
-    def prepare_model_for_transfer_learning(self, num_classes: int):
+    def prepare_for_transfer_learning(self, classes):
         """
-        Freezes all layers except the output layer
+        Freezes all layers except the output layer and replaces the output layer with a new one
         """
 
     @abstractmethod
@@ -54,12 +46,12 @@ class Model(nn.Module, ABC):
         Returns the weights of the output layer
         """
 
-    def get_serialized_layer_weights(self) -> List[List[float]]:
-        output_layer: nn.Parameter = self.own_model.get_output_layer_weights()
+    def get_serialized_layer_weights(self) -> List[List[str]]:
+        output_layer: Tensor = self.get_output_layer_weights()
         result = []
         for i in range(len(output_layer)):
             weights = []
             for j in range(len(output_layer[i])):
-                weights.append(output_layer[i][j])
+                weights.append(str(output_layer[i][j]))
             result.append(weights)
         return result

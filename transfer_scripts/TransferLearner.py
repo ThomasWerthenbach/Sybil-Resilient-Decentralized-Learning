@@ -64,6 +64,6 @@ class TransferLearner:
                     total_target = np.append(total_target, target.cpu().numpy())
                     correct += pred.eq(target.view_as(pred)).sum().item()
                 if max_correct < correct:
-                    torch.save(model.state_dict(), "mnist-10-epoch-old.pth")
+                    torch.save(model.state_dict(), "mnist-10-epoch.pth")
                     max_correct = correct
                     logging.info("Best accuracy! correct images: %5f" % (correct / (len(testloader) * len(target))))

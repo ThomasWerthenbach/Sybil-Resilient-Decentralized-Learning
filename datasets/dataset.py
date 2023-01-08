@@ -5,6 +5,7 @@ from ml.models.model import ModelType
 
 
 class Dataset(ABC):
+    NUM_CLASSES = None
     DEFAULT_DATA_DIR = '../data'
 
     @abstractmethod
@@ -33,7 +34,7 @@ class Dataset(ABC):
         if model == ModelType.MNIST:
             from datasets.MNIST import MNISTDataset
             return MNISTDataset
-        elif model == ModelType.MNIST:
+        elif model == ModelType.EMNIST:
             from datasets.EMNIST import EMNISTLetterDataset
             return EMNISTLetterDataset
         elif model == ModelType.FashionMNIST:

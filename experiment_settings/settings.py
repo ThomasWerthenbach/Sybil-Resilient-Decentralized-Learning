@@ -1,5 +1,5 @@
-from ml.executor.executor import Algorithm
-from ml.models.model import ModelType
+from experiment_settings.algorithms import Algorithm
+from experiment_settings.model_types import ModelType
 
 
 class Settings:
@@ -13,6 +13,6 @@ class Settings:
     transitivity_decay = 0.01
 
     model: ModelType = ModelType.EMNIST
-    pretrained_model_location = "models/emnist/emnist.pth"
+    pretrained_model_location = "../transfer_scripts/mnist-10-epoch.pth"
 
     algorithm: Algorithm = Algorithm.AVERAGE

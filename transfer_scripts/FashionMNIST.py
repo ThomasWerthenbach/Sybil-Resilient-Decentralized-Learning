@@ -76,7 +76,7 @@ if __name__ == '__main__':
 # print("Datasets prepared")
 #
 # # Model
-# model = create_model(settings.dataset)
+# model = create_model(experiment_settings.dataset)
 # print(model)
 #
 # print("Initial evaluation")
@@ -85,7 +85,7 @@ if __name__ == '__main__':
 # for round in range(NUM_ROUNDS):
 #     start_time = time.time()
 #     print("Starting training round %d" % (round + 1))
-#     trainer = ModelTrainer(data_dir, settings, 0)
+#     trainer = ModelTrainer(data_dir, experiment_settings, 0)
 #     trainer.train(model)
 #     print("Training round %d done - time: %f" % (round + 1, time.time() - start_time))
 #     print(s.test(model))

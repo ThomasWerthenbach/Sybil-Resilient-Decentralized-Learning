@@ -5,7 +5,7 @@ from ipv8.lazy_community import lazy_wrapper
 from ipv8.peer import Peer
 
 from community.introduction_msg import IntroductionMsg
-from community.ml_peer import MLPeer
+from ml.ml_peer import MLPeer
 from community.peer_manager import PeerManager
 from community.settings import Settings
 from community.recommendations_msg import RecommendationsMsg
@@ -23,12 +23,10 @@ class MLCommunity(Community):
         self.add_message_handler(RecommendationsMsg, self.on_recommendations)
         self.add_message_handler(IntroductionMsg, self.on_introduction)
         self.peer_manager = PeerManager()
-        self.me = MLPeer()
+        self.me = None
 
-    def setup(self, settings: Settings):
-        self.settings = settings
-
-    def started(self):
+    def start(self, settings: Settings, peer_id: int):
+        self.me = MLPeer(peer_id, settings)
         self.me.start_lifecycle(self)
 
     async def send_introductions(self, weights: Dict[any, float], data: any):
@@ -47,6 +45,8 @@ class MLCommunity(Community):
         Used to send models to peers
         :param model: Stringified weights of the output layer
         """
+        for peer in self.get_peers():
+            self.ez_send(peer, WeightsMsg(weights=list(map(WeightsMsg.ClassWeight, model))))
 
     async def send_recommendations(self, weights: Dict[str, str]):
         # todo: send weights to peers stored in peermanager
@@ -64,4 +64,4 @@ class MLCommunity(Community):
         self.peer_manager.on_weights(peer, payload)
 
     def get_other_models(self) -> Dict[Peer, List[List[float]]]:
-        return self.peer_manager.get_weights()
+        return self.peer_manager.get_and_reset_weights()

@@ -6,7 +6,7 @@ import torch.nn.functional as F
 
 from datasets.dataset import Dataset
 from ml.models.model import Model
-from ml.transfer_settings import TransferSettings
+from transfer_scripts.transfer_settings import TransferSettings
 
 
 logging.basicConfig(level=logging.INFO)
@@ -16,9 +16,9 @@ class TransferLearner:
         self.settings = settings
 
     def train(self):
-        dataset = Dataset.get_dataset_class(self.settings.dataset)()
-        trainloader = dataset.load_trainset(batch_size=self.settings.train_batch_size, shuffle=self.settings.train_shuffle)
-        testloader = dataset.load_testset(batch_size=self.settings.test_batch_size, shuffle=self.settings.test_shuffle)
+        dataset = Dataset.get_dataset_class(self.settings.model)()
+        trainloader = dataset.all_training_data(batch_size=self.settings.train_batch_size, shuffle=self.settings.train_shuffle)
+        testloader = dataset.all_test_data(batch_size=self.settings.test_batch_size, shuffle=self.settings.test_shuffle)
 
         device_name = "cuda" if torch.cuda.is_available() else "cpu"
         device = torch.device(device_name)
@@ -64,6 +64,6 @@ class TransferLearner:
                     total_target = np.append(total_target, target.cpu().numpy())
                     correct += pred.eq(target.view_as(pred)).sum().item()
                 if max_correct < correct:
-                    torch.save(model.state_dict(), "mnist-10-epoch.pth")
+                    torch.save(model.state_dict(), "mnist-10-epoch-old.pth")
                     max_correct = correct
                     logging.info("Best accuracy! correct images: %5f" % (correct / (len(testloader) * len(target))))

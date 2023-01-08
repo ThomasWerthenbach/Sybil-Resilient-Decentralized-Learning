@@ -1,22 +1,29 @@
+from abc import ABC, abstractmethod
 from typing import Type
 
 from ml.models.model import ModelType
 
 
-class Dataset:
+class Dataset(ABC):
     DEFAULT_DATA_DIR = '../data'
 
-    def load_trainset(self, batch_size=32, shuffle=False):
+    @abstractmethod
+    def all_training_data(self, batch_size=32, shuffle=False):
+        """
+        Retrieves the entire dataset (used for transfer learning preparations)
+        """
+
+    @abstractmethod
+    def get_peer_dataset(self, peer_id: int, total_peers: int, non_iid, sizes=None):
         """
         Function to load the training set
         """
-        raise NotImplementedError()
 
-    def load_testset(self, batch_size=32, shuffle=False):
+    @abstractmethod
+    def all_test_data(self, batch_size=32, shuffle=False):
         """
         Function to load the test set
         """
-        raise NotImplementedError()
 
     @staticmethod
     def get_dataset_class(model: ModelType) -> Type['Dataset']:

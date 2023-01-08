@@ -1,14 +1,28 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch import Tensor
 
 from ml.models.model import Model
 
 
 class MNIST(Model):
     """
-    From: https://arxiv.org/abs/2008.10400 (M5)
+    This model has been adapted from https://arxiv.org/abs/2008.10400 (M5), which is currently the best performing model
+    on the MNIST dataset (99.91%), according to https://paperswithcode.com/sota/image-classification-on-mnist.
+    We use the second version proposed in this paper (M5), which has an accuracy of 99.80%.
     """
+
+    def replace_output_layer(self, new_output_layer: Tensor):
+        self.fc1.weight = nn.Parameter(new_output_layer)
+
+    def get_output_layer_weights(self) -> Tensor:
+        return self.fc1.weight
+
+    def prepare_model_for_transfer_learning(self, num_classes: int):
+        for p in self.parameters():
+            p.requires_grad = False
+        self.fc1 = nn.Linear(10240, num_classes, bias=False)
 
     def __init__(self):
         super(MNIST, self).__init__()
@@ -23,7 +37,6 @@ class MNIST(Model):
         self.conv5 = nn.Conv2d(128, 160, 5, bias=False)
         self.conv5_bn = nn.BatchNorm2d(160)
         self.fc1 = nn.Linear(10240, 10, bias=False)
-        self.fc1_bn = nn.BatchNorm1d(10)
 
     def get_logits(self, x):
         x = (x - 0.5) * 2.0
@@ -33,8 +46,7 @@ class MNIST(Model):
         conv4 = F.relu(self.conv4_bn(self.conv4(conv3)))
         conv5 = F.relu(self.conv5_bn(self.conv5(conv4)))
         flat5 = torch.flatten(conv5.permute(0, 2, 3, 1), 1)
-        logits = self.fc1_bn(self.fc1(flat5))
-        return logits
+        return self.fc1(flat5)
 
     def forward(self, x):
         logits = self.get_logits(x)

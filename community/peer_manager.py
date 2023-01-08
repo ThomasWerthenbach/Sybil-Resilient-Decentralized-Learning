@@ -13,5 +13,7 @@ class PeerManager:
     def on_weights(self, peer, weights: WeightsMsg):
         self.latest_model_weights[peer] = list(map(lambda x: list(map(float, x.w)), weights.weights))
 
-    def get_weights(self) -> Dict[Peer, List[List[float]]]:
-        return self.latest_model_weights
+    def get_and_reset_weights(self) -> Dict[Peer, List[List[float]]]:
+        result = self.latest_model_weights
+        self.latest_model_weights = dict()
+        return result

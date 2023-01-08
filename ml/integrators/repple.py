@@ -6,7 +6,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from ml.ml_settings import MLSettings
+from ml.bristle_settings import MLSettings
 
 
 class ReppleIntegrator:

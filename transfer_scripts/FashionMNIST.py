@@ -5,7 +5,6 @@ import torch
 
 from datasets.FashionMNIST import FashionMNISTDataset
 from ml.models.FashionMNIST import FashionMNISTCNN
-from ml.transfer_settings import TransferSettings
 
 logging.basicConfig(level=logging.INFO)
 
@@ -18,8 +17,8 @@ if __name__ == '__main__':
         model.parameters(),
         lr=0.005)
     dataset = FashionMNISTDataset()
-    trainloader = dataset.load_trainset(batch_size=120, shuffle=True)
-    testloader = dataset.load_testset(batch_size=100, shuffle=False)
+    trainloader = dataset.get_peer_dataset(batch_size=120, shuffle=True)
+    testloader = dataset.all_test_data(batch_size=100, shuffle=False)
     criterion = torch.nn.CrossEntropyLoss()
     for epoch in range(1):
         running_loss = 0.0
@@ -49,7 +48,7 @@ if __name__ == '__main__':
             correct += (predicted == labels).sum().item()
     print('Accuracy of the network on the 10000 test images: %d %%' % (
         100 * correct / total))
-    testloader = dataset.load_trainset()
+    testloader = dataset.get_peer_dataset()
     correct = 0
     total = 0
     with torch.no_grad():

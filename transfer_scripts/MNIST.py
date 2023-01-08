@@ -1,15 +1,15 @@
 
 import logging
 
-from ml.transfer_settings import TransferSettings
+from ml.models.model import ModelType
+from transfer_scripts.transfer_settings import TransferSettings
 from transfer_scripts.TransferLearner import TransferLearner
 
 logging.basicConfig(level=logging.INFO)
 
 learning_settings = TransferSettings(
     learning_rate=0.001,
-    dataset="mnist",
-    model="mnist",
+    model=ModelType.MNIST,
     train_shuffle=True,
     test_shuffle=False,
     train_batch_size=120,

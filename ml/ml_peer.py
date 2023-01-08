@@ -9,21 +9,20 @@ class MLPeer:
 
     The main life cycle consists of:
     1: peer created
-    2: record time
-    3: train first epoch
-    4: model trained
-    5: send weights to existing peers
-    6: goto step 9 if algorithm is not Repple
-    7: check if new peers have been discovered, if so, send weights and a data to them. DEPENDS ON STRANGER POLICY
-    8: process received connection requests (verify them and give them a score between 0 and 1).
+    2: train 1 epoch
+    3: model trained
+    4: send weights to existing peers
+    5: goto step 9 if algorithm is not Repple
+    6: check if new peers have been discovered, if so, send weights and a data to them. DEPENDS ON STRANGER POLICY
+    7: process received connection requests (verify them and give them a score between 0 and 1).
        DEPENDS ON REPUTATION
-    9: Wait until X time has passed since recorded timestamp.
-    10: By now, most peers should have finished training, and we have received their weights.
-    11: Evaluate the new weights and update their score and perform the weight integration.
-    12: GOTO 2
+    8: By now, most peers should have finished training, and we have received their weights.
+    9: Evaluate the new weights and update their score and perform the weight integration.
+    10: GOTO 2
     """
 
-    def __init__(self, settings: Settings):
+    def __init__(self, peer_id: int, settings: Settings):
+        self.peer_id = peer_id
         self.settings = settings
 
     def start_lifecycle(self, community: MLCommunity):
@@ -33,8 +32,9 @@ class MLPeer:
         executor: Executor = Executor.get_executor_class(self.settings.algorithm)(self.settings)
 
         executor.prepare_model()
+        executor.load_data(self.peer_id, self.settings.total_peers, self.settings.non_iid)
 
-        # todo: create a data distributor. should be able to provide the data class-wise and get a sample to send in introductions
+        # todo: datadistributor. should be able to get a sample to send in introductions (if still necessary in Repple)
 
         for _ in range(self.settings.max_rounds):
             executor.train()
@@ -49,7 +49,7 @@ class MLPeer:
                 # todo: process received introduction requests, based on stranger policy
                 pass
 
-            # todo wait for some time?
             other_models = community.get_other_models()
-            prioritized_models = executor.prioritize_other_models(other_models)
-            executor.integrate_models(prioritized_models)
+            if len(other_models) > 0:
+                prioritized_models = executor.prioritize_other_models(other_models)
+                executor.integrate_models(prioritized_models)

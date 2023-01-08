@@ -1,7 +1,8 @@
+from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Type
+from typing import Type, List
 
-from torch import nn
+from torch import nn, Tensor
 
 
 class ModelType(Enum):
@@ -13,7 +14,7 @@ class ModelType(Enum):
     EMNIST = 'emnist'
 
 
-class Model(nn.Module):
+class Model(nn.Module, ABC):
     """
     Abstract class for a model
     """
@@ -35,20 +36,30 @@ class Model(nn.Module):
         else:
             raise RuntimeError("Unknown model %s" % model_name)
 
-    def freeze_non_output_layers(self):
+    @abstractmethod
+    def prepare_model_for_transfer_learning(self, num_classes: int):
         """
         Freezes all layers except the output layer
         """
-        raise NotImplementedError()
 
-    def replace_output_layer(self, new_output_layer: nn.Module):
+    @abstractmethod
+    def replace_output_layer(self, new_output_layer: Tensor):
         """
         Replaces the output layer of the model with the given one
         """
-        raise NotImplementedError()
 
-    def get_output_layer_weights(self) -> nn.Parameter:
+    @abstractmethod
+    def get_output_layer_weights(self) -> Tensor:
         """
         Returns the weights of the output layer
         """
-        raise NotImplementedError()
+
+    def get_serialized_layer_weights(self) -> List[List[float]]:
+        output_layer: nn.Parameter = self.own_model.get_output_layer_weights()
+        result = []
+        for i in range(len(output_layer)):
+            weights = []
+            for j in range(len(output_layer[i])):
+                weights.append(output_layer[i][j])
+            result.append(weights)
+        return result

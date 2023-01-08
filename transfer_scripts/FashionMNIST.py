@@ -9,11 +9,6 @@ from ml.transfer_settings import TransferSettings
 
 logging.basicConfig(level=logging.INFO)
 
-learning_settings = TransferSettings(
-    learning_rate=0.001,
-    dataset="FashionMNIST"
-)
-
 if __name__ == '__main__':
     device_name = "cuda" if torch.cuda.is_available() else "cpu"
     device = torch.device(device_name)
@@ -26,7 +21,7 @@ if __name__ == '__main__':
     trainloader = dataset.load_trainset(batch_size=120, shuffle=True)
     testloader = dataset.load_testset(batch_size=100, shuffle=False)
     criterion = torch.nn.CrossEntropyLoss()
-    for epoch in range(10):
+    for epoch in range(1):
         running_loss = 0.0
         for i, data in enumerate(trainloader, 0):
             inputs, labels = data
@@ -65,8 +60,11 @@ if __name__ == '__main__':
             _, predicted = torch.max(outputs.data, 1)
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
-    print('Accuracy of the network on the 10000 test images: %d %%' % (
+    print('Accuracy of the network on the 10000 train images: %d %%' % (
         100 * correct / total))
+
+    for p in model.parameters():
+        print(p)
 
 
 # data_dir = os.path.join(os.environ["HOME"], "leaf", "femnist")

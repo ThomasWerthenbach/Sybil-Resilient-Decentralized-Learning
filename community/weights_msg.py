@@ -3,15 +3,13 @@ from typing import List
 from ipv8.messaging.payload_dataclass import dataclass
 
 
-@dataclass(msg_id=1)
+@dataclass(msg_id=3)
 class WeightsMsg:
     """
-    Message used to communicate weights used in random flood calculation.
+    Message used to communicate the new trained model weights.
     """
-
     @dataclass
-    class Weight:
-        p: str
-        w: str  # floats are not supported in ipv8
+    class ClassWeight:
+        w: List[str]
 
-    weights: List[Weight]  # peers and weights
+    weights: List[ClassWeight]

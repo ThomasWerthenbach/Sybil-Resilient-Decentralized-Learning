@@ -1,8 +1,17 @@
-from typing import List
+from typing import List, Dict
 
 from ipv8.peer import Peer
+
+from community.weights_msg import WeightsMsg
 
 
 class PeerManager:
     def __init__(self):
-        self.approached_peers: List[Peer] = []
+        self.approached_peers: List[Peer] = list()
+        self.latest_model_weights: Dict[Peer, List[List[float]]] = dict()
+
+    def on_weights(self, peer, weights: WeightsMsg):
+        self.latest_model_weights[peer] = list(map(lambda x: list(map(float, x.w)), weights.weights))
+
+    def get_weights(self) -> Dict[Peer, List[List[float]]]:
+        return self.latest_model_weights

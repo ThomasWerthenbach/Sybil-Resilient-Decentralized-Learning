@@ -53,8 +53,8 @@ class BristleIntegrator:
 
         certainty: List[float] = [0.0] * self.n_classes
         disc: List[List[float]] = [[0.0] * self.n_classes for _ in range(len(self.models))]
-        faWg: List[List[float]] = [[0.0] * self.n_classes for _ in range(len(self.models))]
-        foWg: List[float] = [0.0] * self.n_classes
+        familiar_weights: List[List[float]] = [[0.0] * self.n_classes for _ in range(len(self.models))]
+        foreign_weights: List[float] = [0.0] * self.n_classes
         # calculate weights by Bristle
         for i, _ in enumerate(self.models):
             # Get phi best performing classes for model
@@ -66,8 +66,8 @@ class BristleIntegrator:
                                   * self.settings.theta) ** 3
                 else:
                     disc[i][c] = -sys.maxsize
-                faWg[i][c] = self.sigmoid_familiar(disc[i][c], certainty[i])
-            foWg[i] += self.sigmoid_foreign(sum(disc[i]), certainty[i])
+                familiar_weights[i][c] = self.sigmoid_familiar(disc[i][c], certainty[i])
+            foreign_weights[i] += self.sigmoid_foreign(sum(disc[i]), certainty[i])
 
         # todo calculate new model through weighted average.
         return average_model

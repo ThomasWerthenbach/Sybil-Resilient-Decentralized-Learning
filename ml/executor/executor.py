@@ -36,33 +36,7 @@ class Executor(ABC):
         self.model.load_state_dict(torch.load(self.settings.pretrained_model_location))
         self.model.prepare_for_transfer_learning(self.num_classes)
 
-    def train(self):
-        """
-        Train the model for one epoch
-        """
-        if self.peer_dataset is None:
-            raise RuntimeError("No peer dataset available")
-        optimizer = torch.optim.SGD(
-            self.model.parameters(),
-            lr=self.settings.learning_rate)
 
-        self.model.train()
-        train_loss = 0
-        train_corr = 0
-        for i, data in enumerate(self.peer_dataset, 0):
-            inputs, labels = data
-            inputs, labels = inputs.to('cpu'), labels.to('cpu')
-            optimizer.zero_grad()
-            outputs = self.model(inputs)
-            loss = F.nll_loss(outputs, labels)
-            train_pred = outputs.argmax(dim=1, keepdim=True)
-            train_corr += train_pred.eq(labels.view_as(train_pred)).sum().item()
-            train_loss += F.nll_loss(outputs, labels, reduction='sum').item()
-            loss.backward()
-            optimizer.step()
-            if i % 50 == 0:
-                logging.info('Train Epoch status [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                    i, len(self.peer_dataset), 100. * i / len(self.peer_dataset), loss.item()))
         # self.model.eval()
         # test_loss = 0
         # correct = 0

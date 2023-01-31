@@ -14,7 +14,7 @@ learning_settings = TransferSettings(
     test_shuffle=False,
     train_batch_size=120,
     test_batch_size=100,
-    epochs=10
+    epochs=100
 )
 
 if __name__ == '__main__':

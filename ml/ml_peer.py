@@ -1,4 +1,4 @@
-from community.ml_community import MLCommunity
+from community.base_community import BaseCommunity
 from experiment_settings.algorithms import Algorithm
 from experiment_settings.settings import Settings
 from ml.executor.executor import Executor
@@ -26,7 +26,7 @@ class MLPeer:
         self.peer_id = peer_id
         self.settings = settings
 
-    def start_lifecycle(self, community: MLCommunity):
+    def start_lifecycle(self, community: BaseCommunity):
         """
         Method called by ipv8 overlay when the peer is ready to start.
         """

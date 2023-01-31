@@ -1,8 +1,13 @@
+from typing import Type
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
 
+import datasets
+from datasets.MNIST import MNISTDataset
+from datasets.dataset import Dataset
 from ml.models.model import Model
 
 
@@ -13,16 +18,8 @@ class MNIST(Model):
     We use the second version proposed in this paper (M5), which has an accuracy of 99.80%.
     """
 
-    def replace_output_layer(self, new_output_layer: Tensor):
-        self.fc1.weight = nn.Parameter(new_output_layer)
-
-    def get_output_layer_weights(self) -> Tensor:
-        return self.fc1.weight
-
-    def prepare_for_transfer_learning(self, num_classes: int):
-        for p in self.parameters():
-            p.requires_grad = False
-        self.fc1 = nn.Linear(10240, num_classes, bias=False)
+    def get_dataset_class(self) -> Type[Dataset]:
+        return MNISTDataset
 
     def __init__(self):
         super(MNIST, self).__init__()

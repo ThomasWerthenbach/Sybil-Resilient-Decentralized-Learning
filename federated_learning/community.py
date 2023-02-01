@@ -30,14 +30,17 @@ class FLCommunity(Community):
         self.eva = EVAProtocol(self, self.on_receive_model)
         self.manager: Manager | None = None
 
-    def start(self, settings: Settings, peer_id: int, role: Role):
+    def started(self):
+        pass
+
+    def start(self, settings: Settings, peer_id: int, role: Role, server: Peer):
         if role == Role.SERVER:
             # I am the server, my task is to wait for all nodes to finish training and then aggregate the model
-            self.manager = ServerManager(settings, peer_id)
+            self.manager = ServerManager(settings, peer_id, self.send_model)
         elif role == Role.NODE:
             # I am a node, my task is to train on our own data and send our model to the server. Then we wait for the
             # aggregated model and train this again.
-            self.manager = NodeManager(settings, peer_id, self.send_model)
+            self.manager = NodeManager(settings, peer_id, self.send_model, server)
         else:
             # I am the adversary, my task is to poison the aggregated model
             self.manager = SybilManager(settings, peer_id, self.send_model)

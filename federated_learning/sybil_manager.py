@@ -1,3 +1,4 @@
+import copy
 from typing import Callable
 
 import torch
@@ -6,8 +7,8 @@ from torch.utils.data import DataLoader
 
 from experiment_settings.settings import Settings
 from federated_learning.manager import Manager
-from federated_learning.util import deserialize_model, serialize_model
 from ml.models.model import Model
+from ml.util import deserialize_model
 
 
 class SybilManager(Manager):
@@ -29,7 +30,8 @@ class SybilManager(Manager):
 
     def start_next_epoch(self):
         # 1.
-        self.train()
+        trained_model = copy.deepcopy(self.model)
+        self.train(self.model)
         # 2.
         # todo send from multiple public keys.
         server = None

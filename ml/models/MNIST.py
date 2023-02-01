@@ -3,9 +3,7 @@ from typing import Type
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch import Tensor
 
-import datasets
 from datasets.MNIST import MNISTDataset
 from datasets.dataset import Dataset
 from ml.models.model import Model

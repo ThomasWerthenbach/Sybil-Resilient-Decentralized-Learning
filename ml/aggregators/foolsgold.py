@@ -5,16 +5,18 @@ import sklearn.metrics.pairwise as smp
 from torch import nn
 
 from ml.aggregators.aggregator import Aggregator
+from ml.aggregators.util import weighted_average
 
 
 class FoolsGold(Aggregator):
     """
-    todo Foolsgold paper citation
+    C. Fung, C. J. M. Yoon, and I. Beschastnikh, “Mitigating sybils in federated learning poisoning,” CoRR,
+    vol. abs/1808.04866, 2018. [Online]. Available: https://arxiv.org/abs/1808.04866
     """
 
-    # todo signature is incorrect, we need the history
-    def aggregate(self, models: List[nn.Module], relevant_parameter_indices: List[int] = None):
-        parameters = map(lambda x: x.parameters, models)
+    def aggregate(self, deltas: List[nn.Module], history: List[nn.Module],
+                  relevant_parameter_indices: List[int] = None):
+        parameters = map(lambda x: x.parameters(), history)
         flattened_parameters = list(map(lambda x: np.array(x).flatten(), parameters))
 
         if relevant_parameter_indices:
@@ -22,11 +24,11 @@ class FoolsGold(Aggregator):
         else:
             relevant_parameters = flattened_parameters
 
-        cs = smp.cosine_similarity(relevant_parameters) - np.eye(len(models))
+        cs = smp.cosine_similarity(relevant_parameters) - np.eye(len(history))
 
         max_cs = np.max(cs, axis=1) + 1e-5
-        for i in range(len(models)):
-            for j in range(len(models)):
+        for i in range(len(history)):
+            for j in range(len(history)):
                 if i == j:
                     continue
                 if max_cs[i] < max_cs[j]:
@@ -48,6 +50,4 @@ class FoolsGold(Aggregator):
         # todo krum
 
         # Apply the weight vector on this delta
-        delta = np.reshape(this_delta, (n, d))
-
-        return np.dot(delta.T, wv)
+        return weighted_average(deltas, wv)

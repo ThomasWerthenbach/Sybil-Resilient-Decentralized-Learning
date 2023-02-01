@@ -6,5 +6,6 @@ from torch import nn
 
 class Aggregator:
     @abstractmethod
-    def aggregate(self, models: List[nn.Module], relevant_weights: List[int] = None):
+    def aggregate(self, delta: List[nn.Module], delta_history: List[nn.Module],
+                  relevant_weights: List[int] = None) -> nn.Module:
         pass

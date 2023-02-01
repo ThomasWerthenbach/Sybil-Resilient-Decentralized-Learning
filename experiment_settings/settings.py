@@ -1,5 +1,7 @@
 from typing import Type
 
+from ml.aggregators.aggregator import Aggregator
+from ml.aggregators.average import Average
 from ml.models.MNIST import MNIST
 from ml.models.model import Model
 
@@ -13,3 +15,4 @@ class Settings:
     non_iid = False
     learning_rate = 0.001
     model: Type[Model] = MNIST
+    aggregator: Type[Aggregator] = Average

@@ -3,8 +3,6 @@ from typing import Type
 
 from torch.utils.data import DataLoader
 
-from ml.models.model import ModelType
-
 
 class Dataset(ABC):
     NUM_CLASSES = None
@@ -28,18 +26,18 @@ class Dataset(ABC):
         Function to load the test set
         """
 
-    @staticmethod
-    def get_dataset_class(model: ModelType) -> Type['Dataset']:
-        """
-        Function to get the dataset class
-        """
-        if model == ModelType.MNIST:
-            from datasets.MNIST import MNISTDataset
-            return MNISTDataset
-        elif model == ModelType.EMNIST:
-            from datasets.EMNIST import EMNISTLetterDataset
-            return EMNISTLetterDataset
-        elif model == ModelType.FashionMNIST:
-            from datasets.FashionMNIST import FashionMNISTDataset
-            return FashionMNISTDataset
-        raise NotImplementedError()
+    # @staticmethod
+    # def get_dataset_class(model:) -> Type['Dataset']:
+    #     """
+    #     Function to get the dataset class
+    #     """
+    #     if model == ModelType.MNIST:
+    #         from datasets.MNIST import MNISTDataset
+    #         return MNISTDataset
+    #     elif model == ModelType.EMNIST:
+    #         from datasets.EMNIST import EMNISTLetterDataset
+    #         return EMNISTLetterDataset
+    #     elif model == ModelType.FashionMNIST:
+    #         from datasets.FashionMNIST import FashionMNISTDataset
+    #         return FashionMNISTDataset
+    #     raise NotImplementedError()

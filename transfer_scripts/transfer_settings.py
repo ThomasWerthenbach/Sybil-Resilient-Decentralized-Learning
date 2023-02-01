@@ -1,4 +1,3 @@
-from ml.models.model import ModelType
 
 
 class TransferSettings:

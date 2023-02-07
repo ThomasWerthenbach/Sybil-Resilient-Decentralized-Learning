@@ -1,3 +1,5 @@
+import json
+from time import sleep
 from typing import Dict, List, Callable
 
 from ipv8.types import Peer
@@ -20,6 +22,7 @@ class ServerManager(Manager):
     def __init__(self, settings: Settings, peer_id: int, send_model: Callable[[Peer, bytes, bytes], None]):
         self.peer_id = peer_id
         self.send_model = send_model
+        self.round = 0
         self.deltas: Dict[Peer, nn.Module] = dict()
         self.accumulated_update_history: Dict[Peer, nn.Module] = dict()
         self.settings = settings
@@ -30,7 +33,7 @@ class ServerManager(Manager):
         self.deltas = dict()
         return result
 
-    def receive_model(self, peer: Peer, delta: bytes):
+    def receive_model(self, peer: Peer, info: bytes, delta: bytes):
         print("SERVER RECEIVED MODEL FROM PEER", peer)
         if peer in self.deltas:
             return
@@ -54,8 +57,10 @@ class ServerManager(Manager):
             self.deltas = dict()
 
             # Send aggregated delta to all nodes
+            print("SERVER SENDS MODEL TO ALL PEERS")
+            self.round += 1
             for peer in peers:
-                self.send_model(peer, b'', serialize_model(result))
+                self.send_model(peer, json.dumps({'round': self.round}).encode(), serialize_model(result))
 
     def start_next_epoch(self):
         pass

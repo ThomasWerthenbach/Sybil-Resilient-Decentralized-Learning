@@ -12,7 +12,7 @@ class Settings:
     total_peers = 2
 
     # ML job settings
-    non_iid = False
+    non_iid = True
     learning_rate = 0.001
     model: Type[Model] = MNIST
     aggregator: Type[Aggregator] = Average

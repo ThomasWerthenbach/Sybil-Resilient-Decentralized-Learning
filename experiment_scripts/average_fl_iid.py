@@ -41,5 +41,5 @@ async def start_communities(amount: int):
 
 if __name__ == '__main__':
     settings = Settings()
-    ensure_future(start_communities(2))
+    ensure_future(start_communities(settings.total_peers))
     get_event_loop().run_forever()

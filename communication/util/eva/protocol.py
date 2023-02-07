@@ -151,7 +151,15 @@ class EVAProtocol:  # pylint: disable=too-many-instance-attributes
         self.eva_messages[message_class] = self.last_message_id
         self.last_message_id += 1
 
-    def send_binary(self, peer: Peer, info: bytes, data: bytes) -> Future[TransferResult]:
+    def get_nonce(self) -> int:
+        """Get a random nonce.
+
+        Returns:
+            int: random nonce
+        """
+        return self.random.randint(0, MAX_U32)
+
+    def send_binary(self, peer: Peer, info: bytes, data: bytes, nonce: int) -> Future[TransferResult]:
         """Send a big binary data.
 
         Due to ipv8 specifics, we can use only one socket port per one peer.
@@ -188,7 +196,7 @@ class EVAProtocol:  # pylint: disable=too-many-instance-attributes
         if peer == self.community.my_peer:
             raise ValueException('The receiver can not be equal to the sender')
 
-        nonce = self.random.randint(0, MAX_U32)
+        # nonce = self.random.randint(0, MAX_U32)
         data_size = len(data)
         if data_size > self.settings.binary_size_limit:
             raise SizeException(f'Data size limit {self.settings.binary_size_limit} has been exceeded: {data_size}')

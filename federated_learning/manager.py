@@ -12,7 +12,7 @@ from ml.models.model import Model
 
 class Manager:
     @abstractmethod
-    def receive_model(self, peer_pk: Peer, delta: bytes):
+    def receive_model(self, peer_pk: Peer, info: bytes, delta: bytes):
         pass
 
     @abstractmethod

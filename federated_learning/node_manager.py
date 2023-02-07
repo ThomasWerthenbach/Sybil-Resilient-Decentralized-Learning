@@ -1,4 +1,5 @@
 import copy
+import json
 from typing import Callable
 
 from ipv8.types import Peer
@@ -17,24 +18,33 @@ class NodeManager(Manager):
     4. Repeat
     """
 
-    def __init__(self, settings: Settings, peer_id: int, send_model: Callable[[Peer, bytes, bytes], None],
+    def __init__(self, settings: Settings, peer_id: int, me: Peer, send_model: Callable[[Peer, bytes, bytes], None],
                  server: Peer):
         self.peer_id = peer_id
+        self.me = me
+        self.round = 0
         self.settings = settings
         self.send_model = send_model
         self.model = settings.model()
         self.server = server
-        self.data = self.model.get_dataset_class()().get_peer_dataset(peer_id, settings.total_peers, settings.non_iid)
+        self.data = self.model.get_dataset_class()().get_peer_dataset(peer_id, 10, settings.non_iid)
         # Used for producing results
         self.full_test_data = self.model.get_dataset_class()().all_test_data(120)
 
     def start_next_epoch(self) -> None:
         trained_model = copy.deepcopy(self.model)
         self.train(trained_model)
-        self.send_model(self.server, b'', serialize_model(model_difference(self.model, trained_model)))
+        self.send_model(self.server, json.dumps({'round': self.round}).encode(),
+                        serialize_model(model_difference(self.model, trained_model)))
 
-    def receive_model(self, peer_pk: Peer, model: bytes):
+    def receive_model(self, peer_pk: Peer, info: bytes, model: bytes):
         # 4.
+        r = json.loads(info.decode())['round']
+        if self.round >= r:
+            # We already received a model during this round.
+            return
+        print(f"Peer {self.me} received model from server {peer_pk}")
+        self.round = r
         self.model = model_sum(self.model, deserialize_model(model, self.settings))
         self.start_next_epoch()
 

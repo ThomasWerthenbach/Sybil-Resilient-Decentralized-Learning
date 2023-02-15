@@ -1,3 +1,3 @@
 [submodule "gumby"]
 	path = gumby
-	url = git@github.com:Tribler/gumby.git
+	url = git@github.com:ThomasWerthenbach/gumby.git

@@ -19,14 +19,13 @@ class ServerManager(Manager):
     3. Send aggregated model to all nodes
     """
 
-    def __init__(self, settings: Settings, peer_id: int, send_model: Callable[[Peer, bytes, bytes], None]):
-        self.peer_id = peer_id
+    def __init__(self, settings: Settings, send_model: Callable[[Peer, bytes, bytes], None]):
         self.send_model = send_model
         self.round = 0
         self.deltas: Dict[Peer, nn.Module] = dict()
         self.accumulated_update_history: Dict[Peer, nn.Module] = dict()
         self.settings = settings
-        self.aggregator: Aggregator = settings.aggregator()
+        self.aggregator: Aggregator = Aggregator.get_aggregator_class(settings.aggregator)()
 
     def get_all_models_and_reset(self) -> List[bytes]:
         result = list(map(lambda x: x[1], self.deltas.items()))

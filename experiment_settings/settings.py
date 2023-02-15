@@ -1,18 +1,13 @@
-from typing import Type
+from dataclasses import dataclass
 
-from ml.aggregators.aggregator import Aggregator
-from ml.aggregators.average import Average
-from ml.models.MNIST import MNIST
-from ml.models.model import Model
+from dataclasses_json import dataclass_json
 
 
+@dataclass_json
+@dataclass
 class Settings:
-    # Network settings
-    max_rounds = 100
-    total_peers = 2
-
     # ML job settings
     non_iid = True
     learning_rate = 0.001
-    model: Type[Model] = MNIST
-    aggregator: Type[Aggregator] = Average
+    model = 'MNIST'
+    aggregator = 'average'

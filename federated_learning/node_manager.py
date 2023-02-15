@@ -7,6 +7,7 @@ from torch.utils.data import DataLoader
 
 from experiment_settings.settings import Settings
 from federated_learning.manager import Manager
+from ml.models.model import Model
 from ml.util import model_difference, model_sum, serialize_model, deserialize_model
 
 
@@ -25,7 +26,7 @@ class NodeManager(Manager):
         self.round = 0
         self.settings = settings
         self.send_model = send_model
-        self.model = settings.model()
+        self.model = Model.get_model_class(settings.model)()
         self.server = server
         self.data = self.model.get_dataset_class()().get_peer_dataset(peer_id, 10, settings.non_iid)
         # Used for producing results

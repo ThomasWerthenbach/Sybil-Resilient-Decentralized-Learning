@@ -5,3 +5,4 @@ venv
 logs
 keys
 **__pycache__
+output

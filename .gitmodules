@@ -1,0 +1,3 @@
+[submodule "gumby"]
+	path = gumby
+	url = git@github.com:Tribler/gumby.git

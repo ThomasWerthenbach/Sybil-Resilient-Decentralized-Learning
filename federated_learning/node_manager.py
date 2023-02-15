@@ -21,6 +21,7 @@ class NodeManager(Manager):
 
     def __init__(self, settings: Settings, peer_id: int, me: Peer, send_model: Callable[[Peer, bytes, bytes], None],
                  server: Peer):
+        super().__init__()
         self.peer_id = peer_id
         self.me = me
         self.round = 0
@@ -28,7 +29,7 @@ class NodeManager(Manager):
         self.send_model = send_model
         self.model = Model.get_model_class(settings.model)()
         self.server = server
-        self.data = self.model.get_dataset_class()().get_peer_dataset(peer_id, 10, settings.non_iid)
+        self.data = self.model.get_dataset_class()().get_peer_dataset(peer_id - 2, 2, settings.non_iid) # peer_id - 2, as peer_id's are 1-based and the server has id 1
         # Used for producing results
         self.full_test_data = self.model.get_dataset_class()().all_test_data(120)
 
@@ -44,7 +45,7 @@ class NodeManager(Manager):
         if self.round >= r:
             # We already received a model during this round.
             return
-        print(f"Peer {self.me} received model from server {peer_pk}")
+        self.logger.info(f"Peer {self.me} received model from server {peer_pk}")
         self.round = r
         self.model = model_sum(self.model, deserialize_model(model, self.settings))
         self.start_next_epoch()

@@ -3,8 +3,6 @@ from typing import List, Type
 
 from torch import nn
 
-from ml.aggregators.average import Average
-
 
 class Aggregator(ABC):
     @abstractmethod
@@ -15,6 +13,6 @@ class Aggregator(ABC):
     @staticmethod
     def get_aggregator_class(name: str) -> Type['Aggregator']:
         if name == 'average':
+            from ml.aggregators.average import Average
             return Average
         raise NotImplementedError(f"No aggregator found for {name}")
-

@@ -4,7 +4,6 @@ from typing import Type
 from torch import nn
 
 from datasets.dataset import Dataset
-from ml.models.MNIST import MNIST
 
 
 class Model(nn.Module, ABC):
@@ -19,5 +18,6 @@ class Model(nn.Module, ABC):
     @staticmethod
     def get_model_class(name: str) -> Type['Model']:
         if name == 'MNIST':
+            from ml.models.MNIST import MNIST
             return MNIST
         raise NotImplementedError(f"No model found for {name}")

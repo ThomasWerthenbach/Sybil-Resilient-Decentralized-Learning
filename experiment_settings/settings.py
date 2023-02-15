@@ -11,3 +11,6 @@ class Settings:
     learning_rate = 0.001
     model = 'MNIST'
     aggregator = 'average'
+
+    # Experiment settings
+    total_peers: int

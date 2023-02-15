@@ -1,12 +1,12 @@
+import os
 from abc import ABC, abstractmethod
-from typing import Type
 
 from torch.utils.data import DataLoader
 
 
 class Dataset(ABC):
     NUM_CLASSES = None
-    DEFAULT_DATA_DIR = '../data'
+    DEFAULT_DATA_DIR = os.path.join(os.path.dirname(__file__), '../data')
 
     @abstractmethod
     def all_training_data(self, batch_size=32, shuffle=False) -> DataLoader:

@@ -1,5 +1,4 @@
 import json
-from time import sleep
 from typing import Dict, List, Callable
 
 from ipv8.types import Peer

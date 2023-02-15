@@ -11,6 +11,9 @@ from ml.models.model import Model
 
 
 class Manager:
+    def __init__(self):
+        self.logger = logging.getLogger(self.__class__.__name__)
+
     @abstractmethod
     def receive_model(self, peer_pk: Peer, info: bytes, delta: bytes):
         pass
@@ -49,6 +52,7 @@ class Manager:
 
         model.train()
         train_loss = 0
+        self.logger.info(f"Training for 1 epoch with dataset length: {len(dataset)}")
         for i, data in enumerate(dataset, 0):
             inputs, labels = data
             inputs, labels = inputs.to(device), labels.to(device)
@@ -59,7 +63,7 @@ class Manager:
             loss.backward()
             optimizer.step()
             if i % 50 == 0:
-                logging.info('Train Epoch status [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                self.logger.info('Train Epoch status [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                     i, len(dataset), 100. * i / len(dataset), loss.item()))
 
         # Evaluate the model on the full test set for results
@@ -76,5 +80,6 @@ class Manager:
                 test_corr += pred.eq(target.view_as(pred)).sum().item()
         test_loss /= len(test_dataset)
         test_acc = 100. * test_corr / (len(test_dataset) * 120)
-        logging.info('Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(
+        self.logger.info('Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(
             test_loss, test_corr, len(test_dataset) * 120, test_acc))
+

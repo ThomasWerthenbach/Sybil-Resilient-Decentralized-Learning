@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 from torchvision.transforms import ToTensor
 
 from datasets.dataset import Dataset
-from datasets.partitioner import DataPartitioner
+from datasets.partitioner import DataPartitioner, KShardDataPartitioner
 
 
 class MNISTDataset(Dataset):
@@ -24,7 +24,19 @@ class MNISTDataset(Dataset):
         data = torchvision.datasets.MNIST(
             root=self.DEFAULT_DATA_DIR + '/train', train=True, download=True, transform=ToTensor(),
         )
-        return DataLoader(DataPartitioner(data, sizes).use(peer_id), batch_size=batch_size, shuffle=shuffle)
+        if not non_iid:
+            train_set = DataPartitioner(data, sizes).use(peer_id)
+        else:
+            train_data = {key: [] for key in range(10)}
+            for x, y in data:
+                train_data[y].append(x)
+            all_trainset = []
+            for y, x in train_data.items():
+                all_trainset.extend([(a, y) for a in x])
+            train_set = KShardDataPartitioner(
+                all_trainset, sizes
+            ).use(peer_id)
+        return DataLoader(train_set, batch_size=batch_size, shuffle = shuffle)
 
     def all_test_data(self, batch_size=32, shuffle=False):
         return DataLoader(torchvision.datasets.MNIST(

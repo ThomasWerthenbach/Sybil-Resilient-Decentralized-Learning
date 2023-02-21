@@ -25,7 +25,7 @@ class MNISTDataset(Dataset):
             root=self.DEFAULT_DATA_DIR + '/train', train=True, download=True, transform=ToTensor(),
         )
         if not non_iid:
-            train_set = DataPartitioner(data, sizes, seed=peer_id).use(peer_id)
+            train_set = DataPartitioner(data, sizes).use(peer_id)
         else:
             train_data = {key: [] for key in range(10)}
             for x, y in data:
@@ -34,7 +34,7 @@ class MNISTDataset(Dataset):
             for y, x in train_data.items():
                 all_trainset.extend([(a, y) for a in x])
             train_set = KShardDataPartitioner(
-                all_trainset, sizes, seed=peer_id
+                all_trainset, sizes
             ).use(peer_id)
         return DataLoader(train_set, batch_size=batch_size, shuffle=shuffle)
 

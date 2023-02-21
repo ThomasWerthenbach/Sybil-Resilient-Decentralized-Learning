@@ -14,11 +14,10 @@ def model_difference(prior_model: nn.Module, new_model: nn.Module) -> nn.Module:
     prior_model = prior_model.to('cpu')
     new_model = new_model.to('cpu')
     delta = copy.deepcopy(prior_model)
-    delta.requires_grad_(False)
-    for p1, p2, p3 in zip(delta.parameters(), prior_model.parameters(), new_model.parameters()):
-        p1.mul_(0)
-        p1.add_(p3.data - p2.data)
-    delta.requires_grad_(True)
+    with torch.no_grad():
+        for p1, p2, p3 in zip(delta.parameters(), prior_model.parameters(), new_model.parameters()):
+            p1.mul_(0)
+            p1.add_(p3.data - p2.data)
     return delta
 
 
@@ -29,11 +28,10 @@ def model_sum(first_model: nn.Module, second_model: nn.Module) -> nn.Module:
     first_model = first_model.to('cpu')
     second_model = second_model.to('cpu')
     delta = copy.deepcopy(first_model)
-    delta.requires_grad_(False)
-    for p1, p2, p3 in zip(delta.parameters(), first_model.parameters(), second_model.parameters()):
-        p1.mul_(0)
-        p1.add_(p3.data + p2.data)
-    delta.requires_grad_(True)
+    with torch.no_grad():
+        for p1, p2, p3 in zip(delta.parameters(), first_model.parameters(), second_model.parameters()):
+            p1.mul_(0)
+            p1.add_(p3.data + p2.data)
     return delta
 
 

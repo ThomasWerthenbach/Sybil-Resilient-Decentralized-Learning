@@ -40,6 +40,7 @@ class ServerManager(Manager):
         if peer in self.rounds[r]:
             self.logger.info("Server received model from peer twice")
             return
+        self.rounds[r].append(peer)
 
         self.expecting_models -= 1
 

@@ -25,19 +25,3 @@ class Dataset(ABC):
         """
         Function to load the test set
         """
-
-    # @staticmethod
-    # def get_dataset_class(model:) -> Type['Dataset']:
-    #     """
-    #     Function to get the dataset class
-    #     """
-    #     if model == ModelType.MNIST:
-    #         from datasets.MNIST import MNISTDataset
-    #         return MNISTDataset
-    #     elif model == ModelType.EMNIST:
-    #         from datasets.EMNIST import EMNISTLetterDataset
-    #         return EMNISTLetterDataset
-    #     elif model == ModelType.FashionMNIST:
-    #         from datasets.FashionMNIST import FashionMNISTDataset
-    #         return FashionMNISTDataset
-    #     raise NotImplementedError()

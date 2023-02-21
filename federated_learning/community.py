@@ -1,4 +1,5 @@
 import asyncio
+import traceback
 from asyncio import ensure_future, Future
 
 from ipv8.community import Community
@@ -27,19 +28,23 @@ class FLCommunity(Community):
         # - 2. EVA will use a sliding-window mechanism to limit the amount of data we potentially have to re-sent.
         self.eva = EVAProtocol(self, self.on_receive_model)
         self.manager: Manager | None = None
+        self.experiment_module = None
 
     def started(self):
         pass
 
-    def assign_server(self, settings: Settings):
+    def assign_server(self, settings: Settings, experiment_module):
         # I am the server, my task is to wait for all nodes to finish training and then aggregate the model
         self.manager = ServerManager(settings, self.send_model)
+        self.experiment_module = experiment_module
 
-    def assign_node(self, peer_id: int, server: Peer, settings: Settings):
+    def assign_node(self, peer_id: int, server: Peer, settings: Settings, experiment_module):
         # I am a node, my task is to train on our own data and send our model to the server. Then we wait for the
         # aggregated model and train this again.
-        self.manager = NodeManager(settings, peer_id, self.my_peer, self.send_model, server)
+        self.manager = NodeManager(settings, peer_id, self.my_peer, self.send_model, server, experiment_module.autoplot_add_point)
         self.register_task("start_lifecycle_" + str(peer_id), self.start_lifecycle, delay=0)
+        self.experiment_module = experiment_module
+        self.experiment_module.autoplot_create("accuracy")
 
     def assign_sybil(self, peer_id: int, server: Peer, settings: Settings):
         # I am the adversary, my task is to poison the aggregated model
@@ -49,7 +54,11 @@ class FLCommunity(Community):
         self.logger.info(message)
 
     async def on_receive_model(self, result: TransferResult):
-        self.manager.receive_model(result.peer, result.info, result.data)
+        try:
+            self.manager.receive_model(result.peer, result.info, result.data)
+        except:
+            tb = traceback.format_exc()
+            self.logger.error(f"Failed to receive model from {result.peer} Exception:\n {tb}")
 
     async def start_lifecycle(self):
         self.manager.start_next_epoch()
@@ -65,7 +74,11 @@ class FLCommunity(Community):
                 lambda _: self.send_model(peer, serialized_response, binary_data, nonce))
 
     def send_model(self, peer: Peer, info: bytes, model: bytes, nonce: int = None):
-        if nonce is None:
-            nonce = self.eva.get_nonce()
-        future = ensure_future(self.eva.send_binary(peer, info, model, nonce))
-        future.add_done_callback(lambda f: self.on_eva_send_done(f, peer, info, model, nonce))
+        try:
+            if nonce is None:
+                nonce = self.eva.get_nonce()
+            future = ensure_future(self.eva.send_binary(peer, info, model, nonce))
+            future.add_done_callback(lambda f: self.on_eva_send_done(f, peer, info, model, nonce))
+        except:
+            tb = traceback.format_exc()
+            self.logger.error(f"Failed to send model to {peer} Exception:\n {tb}")

@@ -111,6 +111,7 @@ class KShardDataPartitioner(DataPartitioner):
     """
 
     def __init__(self, data, sizes, shards=1, seed=1234):
+        # todo data needs to be supplied sorted
         """
         Constructor. Partitions the data according the parameters
 

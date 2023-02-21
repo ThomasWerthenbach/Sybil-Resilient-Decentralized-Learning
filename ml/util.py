@@ -42,6 +42,7 @@ def serialize_model(model: torch.nn.Module) -> bytes:
 
 
 def deserialize_model(serialized_model: bytes, settings: Settings) -> torch.nn.Module:
-    model = settings.model()
+    from ml.models.model import Model
+    model = Model.get_model_class(settings.model)()
     model.load_state_dict(pickle.loads(serialized_model))
     return model

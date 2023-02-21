@@ -19,6 +19,7 @@ class ServerManager(Manager):
     """
 
     def __init__(self, settings: Settings, send_model: Callable[[Peer, bytes, bytes], None]):
+        super().__init__()
         self.send_model = send_model
         self.round = 0
         self.deltas: Dict[Peer, nn.Module] = dict()
@@ -32,7 +33,7 @@ class ServerManager(Manager):
         return result
 
     def receive_model(self, peer: Peer, info: bytes, delta: bytes):
-        print("SERVER RECEIVED MODEL FROM PEER", peer)
+        self.logger.info("Server received model")
         if peer in self.deltas:
             return
 
@@ -55,7 +56,7 @@ class ServerManager(Manager):
             self.deltas = dict()
 
             # Send aggregated delta to all nodes
-            print("SERVER SENDS MODEL TO ALL PEERS")
+            self.logger.info("Server finished aggregation")
             self.round += 1
             for peer in peers:
                 self.send_model(peer, json.dumps({'round': self.round}).encode(), serialize_model(result))

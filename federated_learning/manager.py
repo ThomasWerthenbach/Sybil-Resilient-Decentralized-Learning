@@ -1,5 +1,6 @@
 import logging
 from abc import abstractmethod
+from typing import Callable
 
 import torch
 import torch.nn.functional as F
@@ -20,19 +21,23 @@ class Manager:
 
     @abstractmethod
     def start_next_epoch(self):
-        pass
+        ...
 
     @abstractmethod
     def get_dataset(self) -> DataLoader:
-        pass
+        ...
 
     @abstractmethod
     def get_settings(self) -> Settings:
-        pass
+        ...
 
     @abstractmethod
     def get_all_test_data(self) -> DataLoader:
-        pass
+        ...
+
+    @abstractmethod
+    def get_statistic_logger(self) -> Callable[[str, float], None]:
+        ...
 
     def train(self, model: Model):
         """
@@ -53,7 +58,7 @@ class Manager:
         model.train()
         train_loss = 0
         self.logger.info(f"Training for 1 epoch with dataset length: {len(dataset)}")
-        for i, data in enumerate(dataset, 0):
+        for i, data in enumerate(dataset):
             inputs, labels = data
             inputs, labels = inputs.to(device), labels.to(device)
             optimizer.zero_grad()
@@ -62,6 +67,7 @@ class Manager:
             train_loss += F.nll_loss(outputs, labels, reduction='sum').item()
             loss.backward()
             optimizer.step()
+            self.logger.info("epoch done: {}".format(i))
             if i % 50 == 0:
                 self.logger.info('Train Epoch status [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                     i, len(dataset), 100. * i / len(dataset), loss.item()))
@@ -80,6 +86,7 @@ class Manager:
                 test_corr += pred.eq(target.view_as(pred)).sum().item()
         test_loss /= len(test_dataset)
         test_acc = 100. * test_corr / (len(test_dataset) * 120)
+        self.get_statistic_logger()('accuracy', test_acc)
         self.logger.info('Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(
             test_loss, test_corr, len(test_dataset) * 120, test_acc))
 

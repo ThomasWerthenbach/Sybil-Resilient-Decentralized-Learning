@@ -14,7 +14,7 @@ class FoolsGold(Aggregator):
     vol. abs/1808.04866, 2018. [Online]. Available: https://arxiv.org/abs/1808.04866
     """
 
-    def aggregate(self, deltas: List[nn.Module], history: List[nn.Module],
+    def aggregate(self, models: List[nn.Module], history: List[nn.Module],
                   relevant_parameter_indices: List[int] = None):
         parameters = map(lambda x: x.parameters(), history)
         flattened_parameters = list(map(lambda x: np.array(x).flatten(), parameters))
@@ -50,4 +50,4 @@ class FoolsGold(Aggregator):
         # todo krum
 
         # Apply the weight vector on this delta
-        return weighted_average(deltas, wv)
+        return weighted_average(models, wv)

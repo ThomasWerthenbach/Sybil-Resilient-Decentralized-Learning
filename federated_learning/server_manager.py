@@ -1,5 +1,5 @@
 import json
-from typing import Dict, List, Callable
+from typing import Dict, Callable
 
 from ipv8.types import Peer
 from torch import nn
@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 from experiment_settings.settings import Settings
 from federated_learning.manager import Manager
 from ml.aggregators.aggregator import Aggregator
-from ml.util import model_sum, deserialize_model, serialize_model
+from ml.util import model_sum, deserialize_model, serialize_model, model_difference
 
 
 class ServerManager(Manager):
@@ -22,38 +22,39 @@ class ServerManager(Manager):
         super().__init__()
         self.send_model = send_model
         self.round = 0
-        self.deltas: Dict[Peer, nn.Module] = dict()
+        self.models: Dict[Peer, nn.Module] = dict()
         self.accumulated_update_history: Dict[Peer, nn.Module] = dict()
         self.settings = settings
         self.aggregator: Aggregator = Aggregator.get_aggregator_class(settings.aggregator)()
 
-    def get_all_models_and_reset(self) -> List[bytes]:
-        result = list(map(lambda x: x[1], self.deltas.items()))
-        self.deltas = dict()
-        return result
-
-    def receive_model(self, peer: Peer, info: bytes, delta: bytes):
-        self.logger.info("Server received model")
-        if peer in self.deltas:
+    def receive_model(self, peer: Peer, info: bytes, serialized_model: bytes):
+        r = json.loads(info.decode())['round']
+        if self.round != r:
+            self.logger.info("Server received model with incorrect round number")
             return
+        self.logger.info("Server received model")
 
         # Store model properly
-        self.deltas[peer] = deserialize_model(delta, self.settings)
-        if peer in self.accumulated_update_history:
-            self.accumulated_update_history[peer] = model_sum(self.accumulated_update_history[peer], self.deltas[peer])
+        model = deserialize_model(serialized_model, self.settings)
+        if peer in self.models:
+            difference = model_difference(self.models[peer], model)
         else:
-            self.accumulated_update_history[peer] = self.deltas[peer]
+            difference = model
+        self.models[peer] = model
+
+        # Store model updates properly
+        if peer in self.accumulated_update_history:
+            self.accumulated_update_history[peer] = model_sum(self.accumulated_update_history[peer], difference)
+        else:
+            self.accumulated_update_history[peer] = difference
 
         # Perform aggregation if all models are received
-        if len(self.deltas) >= self.settings.total_peers:
-            peers = list(self.deltas.keys())
-            deltas = list(map(lambda x: self.deltas[x], peers))
+        if len(self.models) >= self.settings.total_peers:
+            peers = list(self.models.keys())
+            models = list(map(lambda x: self.models[x], peers))
             history = list(map(lambda x: self.accumulated_update_history[x], peers))
 
-            result = self.aggregator.aggregate(deltas, history)
-
-            # Reset deltas
-            self.deltas = dict()
+            result = self.aggregator.aggregate(models, history)
 
             # Send aggregated delta to all nodes
             self.logger.info("Server finished aggregation")

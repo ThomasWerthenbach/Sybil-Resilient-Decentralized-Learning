@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 from experiment_settings.settings import Settings
 from federated_learning.manager import Manager
 from ml.models.model import Model
-from ml.util import model_difference, model_sum, serialize_model, deserialize_model
+from ml.util import serialize_model, deserialize_model
 
 
 class NodeManager(Manager):
@@ -29,7 +29,7 @@ class NodeManager(Manager):
         self.send_model = send_model
         self.model = Model.get_model_class(settings.model)()
         self.server = server
-        self.data = self.model.get_dataset_class()().get_peer_dataset(peer_id - 2, settings.total_peers, settings.non_iid) # peer_id - 2, as peer_id's are 1-based and the server has id 1
+        self.data = self.model.get_dataset_class()().get_peer_dataset(peer_id - 2, settings.total_peers, settings.non_iid)  # peer_id - 2, as peer_id's are 1-based and the server has id 1
         self.statistic_logger = statistic_logger
         # Used for producing results
         self.full_test_data = self.model.get_dataset_class()().all_test_data(120)
@@ -37,8 +37,7 @@ class NodeManager(Manager):
     def start_next_epoch(self) -> None:
         trained_model = copy.deepcopy(self.model)
         self.train(trained_model)
-        self.send_model(self.server, json.dumps({'round': self.round}).encode(),
-                        serialize_model(model_difference(self.model, trained_model)))
+        self.send_model(self.server, json.dumps({'round': self.round}).encode(), serialize_model(trained_model))
 
     def receive_model(self, peer_pk: Peer, info: bytes, model: bytes):
         # 4.
@@ -48,7 +47,7 @@ class NodeManager(Manager):
             return
         self.logger.info(f"Peer {self.me} received model from server {peer_pk}")
         self.round = r
-        self.model = model_sum(self.model, deserialize_model(model, self.settings))
+        self.model = deserialize_model(model, self.settings)
         self.start_next_epoch()
 
     def get_dataset(self) -> DataLoader:

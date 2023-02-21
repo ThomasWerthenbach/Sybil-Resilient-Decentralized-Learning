@@ -41,10 +41,10 @@ class FLCommunity(Community):
     def assign_node(self, peer_id: int, server: Peer, settings: Settings, experiment_module):
         # I am a node, my task is to train on our own data and send our model to the server. Then we wait for the
         # aggregated model and train this again.
-        self.manager = NodeManager(settings, peer_id, self.my_peer, self.send_model, server, experiment_module.autoplot_add_point)
-        self.register_task("start_lifecycle_" + str(peer_id), self.start_lifecycle, delay=0)
+        self.manager = NodeManager(settings, peer_id, self.my_peer, self.send_model, server, experiment_module.add_point)
         self.experiment_module = experiment_module
-        self.experiment_module.autoplot_create("accuracy")
+        self.experiment_module.create_statistic("accuracy")
+        self.register_task("start_lifecycle_" + str(peer_id), self.start_lifecycle, delay=0)
 
     def assign_sybil(self, peer_id: int, server: Peer, settings: Settings):
         # I am the adversary, my task is to poison the aggregated model

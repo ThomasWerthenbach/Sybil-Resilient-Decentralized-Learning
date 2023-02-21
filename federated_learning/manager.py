@@ -53,7 +53,8 @@ class Manager:
             raise RuntimeError("No peer dataset available")
         optimizer = torch.optim.SGD(
             model.parameters(),
-            lr=settings.learning_rate)
+            lr=settings.learning_rate,
+            momentum=settings.momentum)
 
         model.train()
         train_loss = 0

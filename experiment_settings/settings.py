@@ -8,7 +8,8 @@ from dataclasses_json import dataclass_json
 class Settings:
     # ML job settings
     non_iid = True
-    learning_rate = 0.001
+    learning_rate = 0.01
+    momentum = 0.5
     model = 'MNIST'
     aggregator = 'average'
 

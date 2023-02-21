@@ -68,7 +68,6 @@ class Manager:
             train_loss += F.nll_loss(outputs, labels, reduction='sum').item()
             loss.backward()
             optimizer.step()
-            self.logger.info("epoch done: {}".format(i))
             if i % 50 == 0:
                 self.logger.info('Train Epoch status [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                     i, len(dataset), 100. * i / len(dataset), loss.item()))

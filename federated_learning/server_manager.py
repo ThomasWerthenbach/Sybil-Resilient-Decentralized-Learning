@@ -1,5 +1,6 @@
 import json
-from typing import Dict, Callable
+from collections import defaultdict
+from typing import Dict, Callable, List
 
 from ipv8.types import Peer
 from torch import nn
@@ -22,6 +23,8 @@ class ServerManager(Manager):
         super().__init__()
         self.send_model = send_model
         self.round = 0
+        self.expecting_models = settings.total_peers
+        self.rounds: Dict[int, List[Peer]] = defaultdict(list)
         self.models: Dict[Peer, nn.Module] = dict()
         self.accumulated_update_history: Dict[Peer, nn.Module] = dict()
         self.settings = settings
@@ -33,6 +36,12 @@ class ServerManager(Manager):
             self.logger.info("Server received model with incorrect round number")
             return
         self.logger.info("Server received model")
+
+        if peer in self.rounds[r]:
+            self.logger.info("Server received model from peer twice")
+            return
+
+        self.expecting_models -= 1
 
         # Store model properly
         model = deserialize_model(serialized_model, self.settings)
@@ -49,7 +58,8 @@ class ServerManager(Manager):
             self.accumulated_update_history[peer] = difference
 
         # Perform aggregation if all models are received
-        if len(self.models) >= self.settings.total_peers:
+        if self.expecting_models == 0:
+            self.expecting_models = self.settings.total_peers
             peers = list(self.models.keys())
             models = list(map(lambda x: self.models[x], peers))
             history = list(map(lambda x: self.accumulated_update_history[x], peers))

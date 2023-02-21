@@ -33,9 +33,9 @@ scikit-learn==1.2.1
 scipy==1.10.0
 six==1.16.0
 threadpoolctl==3.1.0
-torch==1.13.1+cu117
-torchaudio==0.13.1+cu117
-torchvision==0.14.1+cu117
+torch==1.13.1
+torchaudio==0.13.1
+torchvision==0.14.1
 typing_extensions==4.4.0
 urllib3==1.26.14
 webargs==5.5.3

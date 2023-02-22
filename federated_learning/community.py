@@ -22,10 +22,6 @@ class FLCommunity(Community):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        #todo
-        # EVA protocol can be improved:
-        # - 1. Old acknowledgements need to be able to cancel re-transmissions.
-        # - 2. EVA will use a sliding-window mechanism to limit the amount of data we potentially have to re-sent.
         self.eva = EVAProtocol(self, self.on_receive_model)
         self.manager: Manager | None = None
         self.experiment_module = None
@@ -35,15 +31,15 @@ class FLCommunity(Community):
 
     def assign_server(self, settings: Settings, experiment_module):
         # I am the server, my task is to wait for all nodes to finish training and then aggregate the model
-        self.manager = ServerManager(settings, self.send_model)
+        self.manager = ServerManager(settings, self.send_model, experiment_module.autoplot_add_point)
         self.experiment_module = experiment_module
+        self.experiment_module.autoplot_create("accuracy")
 
     def assign_node(self, peer_id: int, server: Peer, settings: Settings, experiment_module):
         # I am a node, my task is to train on our own data and send our model to the server. Then we wait for the
         # aggregated model and train this again.
         self.manager = NodeManager(settings, peer_id, self.my_peer, self.send_model, server, experiment_module.autoplot_add_point)
         self.experiment_module = experiment_module
-        self.experiment_module.autoplot_create("accuracy")
         self.register_task("start_lifecycle_" + str(peer_id), self.start_lifecycle, delay=0)
 
     def assign_sybil(self, peer_id: int, server: Peer, settings: Settings):

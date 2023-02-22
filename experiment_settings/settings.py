@@ -12,6 +12,8 @@ class Settings:
     momentum: float
     model: str
     aggregator: str
+    epochs: int
 
     # Experiment settings
-    total_peers: int
+    total_hosts: int
+    peers_per_host: int

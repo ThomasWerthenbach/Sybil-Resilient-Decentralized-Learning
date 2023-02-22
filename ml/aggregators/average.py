@@ -14,6 +14,5 @@ class Average(Aggregator):
 
     def aggregate(self, models: List[nn.Module], delta_history: List[nn.Module],
                   relevant_weights: List[int] = None) -> nn.Module:
-        with torch.no_grad():
-            weights = [float(1. / len(models)) for _ in range(len(models))]
-            return weighted_average(models, weights)
+        weights = [float(1. / len(models)) for _ in range(len(models))]
+        return weighted_average(models, weights)

@@ -46,26 +46,28 @@ class ServerManager(Manager):
 
         # Store model properly
         model = deserialize_model(serialized_model, self.settings)
-        if peer in self.models:
-            difference = model_difference(self.models[peer], model)
-        else:
-            difference = model
+        # if peer in self.models:
+        #     difference = model_difference(self.models[peer], model)
+        # else:
+        #     difference = model
         self.models[peer] = model
 
         # Store model updates properly
-        if peer in self.accumulated_update_history:
-            self.accumulated_update_history[peer] = model_sum(self.accumulated_update_history[peer], difference)
-        else:
-            self.accumulated_update_history[peer] = difference
+        # if peer in self.accumulated_update_history:
+        #     self.accumulated_update_history[peer] = model_sum(self.accumulated_update_history[peer], difference)
+        # else:
+        #     self.accumulated_update_history[peer] = difference
 
         # Perform aggregation if all models are received
         if self.expecting_models == 0:
             self.expecting_models = self.settings.total_peers
             peers = list(self.models.keys())
             models = list(map(lambda x: self.models[x], peers))
-            history = list(map(lambda x: self.accumulated_update_history[x], peers))
+            history = list()
+            # history = list(map(lambda x: self.accumulated_update_history[x], peers))
 
             result = self.aggregator.aggregate(models, history)
+            self.models = dict()
 
             # Send aggregated delta to all nodes
             self.logger.info("Server finished aggregation")

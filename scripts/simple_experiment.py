@@ -6,7 +6,9 @@ def done_training(peer, i, m, n: NodeManager):
     n.receive_model(peer, i, m)
 
 if __name__ == '__main__':
-    s = Settings(10)
+    filename = '/home/thomas/tu/rp/repple/gumby/experiments/FL_IID_AVG/settings.json'
+    with open(filename) as f:
+        s = Settings.from_json("".join([x.strip() for x in f.readlines()]))
     n = None
-    n = NodeManager(s, 2, "myself", lambda p, i, m: done_training(p, i, m, n), "server", lambda k, v: print(f"{k}: {v}"))
+    n = NodeManager(s, 25, "myself", lambda p, i, m: done_training(p, i, m, n), "server", lambda k, v: print(f"{k}: {v}"))
     n.start_next_epoch()

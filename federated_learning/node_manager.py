@@ -48,7 +48,6 @@ class NodeManager(Manager):
         self.logger.info(f"Peer {self.me} received model from server {peer_pk} with hash {hash(model)}")
         self.round = r
         self.model = deserialize_model(model, self.settings)
-        self.logger.info(f"Model requires grad: {self.model.requires_grad}")
         self.start_next_epoch()
 
     def get_dataset(self) -> DataLoader:

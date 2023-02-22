@@ -1,3 +1,5 @@
+import copy
+
 import torch
 import torch.nn.functional as F
 import torchvision
@@ -26,20 +28,20 @@ def train(model: MNIST, dataset: DataLoader, settings: Settings, test_dataset: D
         momentum=settings.momentum)
 
     model.train()
-    train_loss = 0
-    print(f"Training for 1 epoch with dataset length: {len(dataset)}")
-    for i, data in enumerate(dataset):
-        inputs, labels = data
-        inputs, labels = inputs.to(device), labels.to(device)
-        optimizer.zero_grad()
-        outputs = model(inputs)
-        loss = F.nll_loss(outputs, labels)
-        train_loss += F.nll_loss(outputs, labels, reduction='sum').item()
-        loss.backward()
-        optimizer.step()
-        if i % 50 == 0:
-            print('Train Epoch status [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                i, len(dataset), 100. * i / len(dataset), loss.item()))
+
+    for _ in range(5):
+        for i, data in enumerate(dataset):
+            inputs, labels = data
+            inputs, labels = inputs.to(device), labels.to(device)
+            optimizer.zero_grad()
+            outputs = model(inputs)
+            loss = F.nll_loss(outputs, labels)
+            loss.backward()
+            optimizer.step()
+                # if i % 50 == 0:
+                #     print('Train Epoch status [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                #         i, len(dataset), 100. * i / len(dataset), loss.item()))
+
 
     # Evaluate the model on the full test set for results
     model.eval()
@@ -56,37 +58,44 @@ def train(model: MNIST, dataset: DataLoader, settings: Settings, test_dataset: D
     test_acc = 100. * test_corr / (len(test_dataset) * 120)
     print('Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(
         test_loss, test_corr, len(test_dataset) * 120, test_acc))
+    return test_acc
 
 
 if __name__ == '__main__':
-    filename = '/home/thomas/tu/rp/repple/gumby/experiments/FL_IID_AVG/settings.json'
+    filename = 'C:\\Users\\takwe\\tu\\Repple\\gumby\\experiments\\FL_IID_AVG\\settings.json'
     with open(filename) as f:
         s = Settings.from_json("".join([x.strip() for x in f.readlines()]))
 
     print(f"Initializing dataset of size {1.0 / s.total_peers}")
     sizes = [1.0 / s.total_peers for _ in range(s.total_peers)]
     data = torchvision.datasets.MNIST(
-        root='/home/thomas/tu/rp/repple/data/train', train=True, download=True, transform=ToTensor(),
+        root='C:\\Users\\takwe\\tu\\Repple\\data\\train', train=True, download=True, transform=ToTensor(),
     )
     partitioner = DataPartitioner(data, sizes)
 
     test_data = DataLoader(torchvision.datasets.MNIST(
-            root='/home/thomas/tu/rp/repple/data/test', train=False, download=True, transform=ToTensor()
-        ), batch_size=32, shuffle=False)
+            root='C:\\Users\\takwe\\tu\\Repple\\data\\test', train=False, download=True, transform=ToTensor()
+        ), batch_size=120, shuffle=False)
 
 
     models = list()
+    m = MNIST()
     for i in range(s.total_peers):
+        # models.append(copy.deepcopy(m))
         models.append(MNIST())
 
-    for _ in range(3):
+    for _ in range(5):
+        accuracy = list()
         for i in range(s.total_peers):
-            train(models[i], DataLoader(partitioner.use(i), batch_size=32, shuffle=False), s, test_data)
+            print(f"Training peer {i}")
+
+            accuracy.append(train(models[i], DataLoader(partitioner.use(i), batch_size=32, shuffle=False), s, test_data))
 
         print("TRAINING DONE ================================")
+        print(f"Accuracy: {(sum(accuracy)/ len(accuracy)):.2f}%")
 
         average_model = weighted_average(models, sizes)
 
         for i in range(s.total_peers):
-            models[i] = average_model
+            models[i] = copy.deepcopy(average_model)
 

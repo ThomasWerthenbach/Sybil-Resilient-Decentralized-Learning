@@ -6,8 +6,8 @@ import torchvision
 from torch.utils.data import DataLoader
 from torchvision.transforms import ToTensor
 
-from datasets.partitioner import DataPartitioner
-from experiment_settings.settings import Settings
+from ml.datasets import KShardDataPartitioner
+from experiments.experiment_settings.settings import Settings
 from ml.aggregators.util import weighted_average
 from ml.models.FasterMNIST import MNIST
 
@@ -16,8 +16,6 @@ def train(model: MNIST, dataset: DataLoader, settings: Settings, test_dataset: D
     """
     Train the model for one epoch
     """
-    device_name = "cuda" if torch.cuda.is_available() else "cpu"
-    device = torch.device(device_name)
     model = model.to(device)
 
     if dataset is None:
@@ -26,6 +24,7 @@ def train(model: MNIST, dataset: DataLoader, settings: Settings, test_dataset: D
         model.parameters(),
         lr=settings.learning_rate,
         momentum=settings.momentum)
+
 
     model.train()
 
@@ -43,26 +42,8 @@ def train(model: MNIST, dataset: DataLoader, settings: Settings, test_dataset: D
                 #         i, len(dataset), 100. * i / len(dataset), loss.item()))
 
 
-    # Evaluate the model on the full test set for results
-    model.eval()
-    test_loss = 0
-    test_corr = 0
-    with torch.no_grad():
-        for data, target in test_dataset:
-            data, target = data.to(device), target.to(device)
-            output = model(data)
-            test_loss += F.nll_loss(output, target, reduction='sum').item()
-            pred = output.argmax(dim=1, keepdim=True)
-            test_corr += pred.eq(target.view_as(pred)).sum().item()
-    test_loss /= len(test_dataset)
-    test_acc = 100. * test_corr / (len(test_dataset) * 120)
-    print('Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(
-        test_loss, test_corr, len(test_dataset) * 120, test_acc))
-    return test_acc
-
-
 if __name__ == '__main__':
-    filename = 'C:\\Users\\takwe\\tu\\Repple\\gumby\\experiments\\FL_IID_AVG\\settings.json'
+    filename = '/experiments/FL_IID_AVG_MNIST\\settings.json'
     with open(filename) as f:
         s = Settings.from_json("".join([x.strip() for x in f.readlines()]))
 
@@ -71,12 +52,28 @@ if __name__ == '__main__':
     data = torchvision.datasets.MNIST(
         root='C:\\Users\\takwe\\tu\\Repple\\data\\train', train=True, download=True, transform=ToTensor(),
     )
-    partitioner = DataPartitioner(data, sizes)
+    if False:
+        # IID
+        partitioner = DataPartitioner(data, sizes)
+    else:
+        # Non-IID
+        train_data = {key: [] for key in range(10)}
+        for x, y in data:
+            train_data[y].append(x)
+        all_trainset = []
+        for y, x in train_data.items():
+            all_trainset.extend([(a, y) for a in x])
+        partitioner = KShardDataPartitioner(
+            all_trainset, sizes
+        )
 
     test_data = DataLoader(torchvision.datasets.MNIST(
             root='C:\\Users\\takwe\\tu\\Repple\\data\\test', train=False, download=True, transform=ToTensor()
         ), batch_size=120, shuffle=False)
 
+    device_name = "cuda" if torch.cuda.is_available() else "cpu"
+    print(device_name)
+    device = torch.device(device_name)
 
     models = list()
     m = MNIST()
@@ -84,17 +81,30 @@ if __name__ == '__main__':
         # models.append(copy.deepcopy(m))
         models.append(MNIST())
 
-    for _ in range(5):
-        accuracy = list()
+    for _ in range(25):
         for i in range(s.total_peers):
             print(f"Training peer {i}")
 
-            accuracy.append(train(models[i], DataLoader(partitioner.use(i), batch_size=32, shuffle=False), s, test_data))
+            train(models[i], DataLoader(partitioner.use(i), batch_size=32, shuffle=False), s, test_data)
 
         print("TRAINING DONE ================================")
-        print(f"Accuracy: {(sum(accuracy)/ len(accuracy)):.2f}%")
 
         average_model = weighted_average(models, sizes)
+
+        average_model.eval()
+        test_loss = 0
+        test_corr = 0
+        with torch.no_grad():
+            for data, target in test_data:
+                data, target = data.to(device), target.to(device)
+                output = average_model(data)
+                test_loss += F.nll_loss(output, target, reduction='sum').item()
+                pred = output.argmax(dim=1, keepdim=True)
+                test_corr += pred.eq(target.view_as(pred)).sum().item()
+        test_loss /= len(test_data)
+        test_acc = 100. * test_corr / (len(test_data) * 120)
+        print('Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(
+            test_loss, test_corr, len(test_data) * 120, test_acc))
 
         for i in range(s.total_peers):
             models[i] = copy.deepcopy(average_model)

@@ -3,7 +3,7 @@ from typing import Type
 
 from torch import nn
 
-from datasets.dataset import Dataset
+from ml.datasets import Dataset
 
 
 class Model(nn.Module, ABC):

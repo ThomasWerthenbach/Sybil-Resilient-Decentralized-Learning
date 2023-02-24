@@ -5,8 +5,8 @@ import torch
 from ipv8.types import Peer
 from torch.utils.data import DataLoader
 
-from experiment_settings.settings import Settings
-from federated_learning.manager import Manager
+from experiments.experiment_settings.settings import Settings
+from experiments.federated_learning.manager import Manager
 from ml.models.model import Model
 from ml.util import deserialize_model
 

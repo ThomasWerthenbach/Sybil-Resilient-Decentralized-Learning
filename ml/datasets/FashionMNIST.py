@@ -2,7 +2,7 @@ import torchvision
 from torch.utils.data import DataLoader
 from torchvision.transforms import ToTensor
 
-from datasets.dataset import Dataset
+from ml.datasets.dataset import Dataset
 
 
 class FashionMNISTDataset(Dataset):

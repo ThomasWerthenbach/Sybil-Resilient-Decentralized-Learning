@@ -2,8 +2,8 @@ import torchvision
 from torch.utils.data import DataLoader
 from torchvision.transforms import ToTensor
 
-from datasets.dataset import Dataset
-from datasets.partitioner import DataPartitioner
+from ml.datasets.dataset import Dataset
+from ml.datasets.partitioner import DataPartitioner
 
 
 class EMNISTLetterDataset(Dataset):

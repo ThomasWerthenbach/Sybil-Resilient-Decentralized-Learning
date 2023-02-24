@@ -4,8 +4,8 @@ import torchvision
 from torch.utils.data import DataLoader
 from torchvision.transforms import ToTensor
 
-from datasets.dataset import Dataset
-from datasets.partitioner import DataPartitioner, KShardDataPartitioner
+from ml.datasets.dataset import Dataset
+from ml.datasets.partitioner import DataPartitioner, KShardDataPartitioner
 
 
 class MNISTDataset(Dataset):
@@ -17,7 +17,7 @@ class MNISTDataset(Dataset):
             root=self.DEFAULT_DATA_DIR + '/train', train=True, download=True, transform=ToTensor(),
         ), batch_size=batch_size, shuffle=shuffle)
 
-    def get_peer_dataset(self, peer_id: int, total_peers: int, non_iid=False, sizes=None, batch_size=32, shuffle=False):
+    def get_peer_dataset(self, peer_id: int, total_peers: int, non_iid=False, sizes=None, batch_size=8, shuffle=False):
         self.logger.info(f"Initializing dataset of size {1.0 / total_peers} for peer {peer_id}. Non-IID: {non_iid}")
         if sizes is None:
             sizes = [1.0 / total_peers for _ in range(total_peers)]

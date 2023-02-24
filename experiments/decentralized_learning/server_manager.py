@@ -8,10 +8,9 @@ import torch
 import torch.nn.functional as F
 from ipv8.types import Peer
 from torch import nn
-from torch.utils.data import DataLoader
 
-from experiment_settings.settings import Settings
-from federated_learning.manager import Manager
+from experiments.experiment_settings.settings import Settings
+from experiments.federated_learning.manager import Manager
 from ml.aggregators.aggregator import Aggregator
 from ml.models.model import Model
 from ml.util import deserialize_model, serialize_model, model_difference, model_sum
@@ -75,7 +74,7 @@ class ServerManager(Manager):
             history = reduce(add, map(lambda x: list(self.accumulated_update_history[x].values()), peers))
 
             result = self.aggregator.aggregate(models, history)
-            self.models.clear()
+            self.models.clear() # todo this will not work, as we need to keep them to calculate the deltas
 
             result.eval()
             test_loss = 0

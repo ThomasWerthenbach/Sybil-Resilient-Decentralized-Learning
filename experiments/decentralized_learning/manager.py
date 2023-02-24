@@ -6,7 +6,7 @@ import torch.nn.functional as F
 from ipv8.types import Peer
 from torch.utils.data import DataLoader
 
-from experiment_settings.settings import Settings
+from experiments.experiment_settings.settings import Settings
 from ml.models.model import Model
 
 

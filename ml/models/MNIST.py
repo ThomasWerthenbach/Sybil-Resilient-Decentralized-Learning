@@ -4,8 +4,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from datasets.MNIST import MNISTDataset
-from datasets.dataset import Dataset
+from ml.datasets import MNISTDataset
+from ml.datasets import Dataset
 from ml.models.model import Model
 
 

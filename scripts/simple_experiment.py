@@ -1,12 +1,12 @@
-from experiment_settings.settings import Settings
-from federated_learning.node_manager import NodeManager
-from ml.models.model import Model
+from experiments.experiment_settings.settings import Settings
+from experiments.federated_learning.node_manager import NodeManager
+
 
 def done_training(peer, i, m, n: NodeManager):
     n.receive_model(peer, i, m)
 
 if __name__ == '__main__':
-    filename = '/home/thomas/tu/rp/repple/gumby/experiments/FL_IID_AVG/settings.json'
+    filename = '/home/thomas/tu/rp/repple/gumby/experiments/FL_IID_AVG_MNIST/settings.json'
     with open(filename) as f:
         s = Settings.from_json("".join([x.strip() for x in f.readlines()]))
     n = None

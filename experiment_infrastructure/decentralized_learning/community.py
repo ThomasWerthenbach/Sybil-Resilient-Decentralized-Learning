@@ -23,18 +23,18 @@ class DLCommunity(Community):
         self.eva = EVAProtocol(self, self.on_receive_model)
         self.manager: Manager | None = None
         self.experiment_module = None
+        self.settings: Settings | None = None
 
     def started(self):
         pass
 
     def assign_node(self, host_id: int, settings: Settings, experiment_module):
-        # I am a node, my task is to train on our own data and send our model to the server. Then we wait for the
-        # aggregated model and train this again.
+        self.settings = settings
         self.manager = NodeManager(settings, host_id, self.my_peer, self.send_model,
                                    experiment_module.autoplot_add_point)
+        self.experiment_module = experiment_module
         for i in range(settings.peers_per_host):
             self.experiment_module.autoplot_create(f"accuracy_{i}")
-        self.experiment_module = experiment_module
         self.register_task("start_lifecycle_" + str(host_id), self.start_lifecycle, delay=0)
 
     def assign_sybil(self, peer_id: int, settings: Settings, experiment_module):
@@ -68,8 +68,13 @@ class DLCommunity(Community):
         try:
             if nonce is None:
                 nonce = self.eva.get_nonce()
-            future = ensure_future(self.eva.send_binary(self.experiment_module.get_peer(str(peer)), info, model, nonce))
-            future.add_done_callback(lambda f: self.on_eva_send_done(f, peer, info, model, nonce))
+
+            if peer == self.experiment_module.my_id:
+                self.register_task("send_to_self_" + str(nonce), self.on_receive_model,
+                                   TransferResult(self.my_peer, info, model, nonce), delay=0)
+            else:
+                future = ensure_future(self.eva.send_binary(self.experiment_module.get_peer(str(peer)), info, model, nonce))
+                future.add_done_callback(lambda f: self.on_eva_send_done(f, peer, info, model, nonce))
         except:
             tb = traceback.format_exc()
             self.logger.error(f"Failed to send model to {peer} Exception:\n {tb}")

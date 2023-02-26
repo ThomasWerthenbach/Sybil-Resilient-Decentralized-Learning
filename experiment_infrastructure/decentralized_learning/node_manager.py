@@ -34,9 +34,11 @@ class NodeManager(Manager):
 
         self.receiving_from: Set[int] = set()
 
-        # Usage: self.adjacency_matrix[receiver][sender]
+        import torch
+        self.logger.info(f"Cuda enabled: {torch.cuda.is_available()}")
 
-        adjacency_matrix: List[List[int]] = pd.read_csv(os.path.join(os.path.dirname(__file__), "100.csv")).values.tolist()
+        # Usage: self.adjacency_matrix[receiver][sender]
+        adjacency_matrix: List[List[int]] = pd.read_csv(os.path.join(os.path.dirname(__file__), f"networks/{settings.network_layout}.csv")).values.tolist()
         for i in range(0, settings.peers_per_host):
             node_id = self.get_node_id(i)
 
@@ -49,17 +51,24 @@ class NodeManager(Manager):
             all_peers = adjacency_matrix[node_id]
             for j in [i for i in range(len(all_peers)) if all_peers[i] == 1]:
                 self.receiving_from.add(j)
-                self.edges[i].append(j)
+                self.edges[node_id].append(j)
 
         self.expecting_models = len(self.receiving_from)
 
     def start_next_epoch(self) -> None:
         for i in range(self.settings.peers_per_host):
-            trained_model = self.nodes[self.get_node_id(i)].start_next_epoch()
+            node_id = self.get_node_id(i)
+            trained_model = self.nodes[node_id].start_next_epoch()
             serialized_model = serialize_model(trained_model)
-            for j in self.edges[i]:
-                self.send_model(j, json.dumps({'round': self.round, 'peer': i}).encode(),
-                                serialized_model)
+
+            sent_to = set()
+            for j in self.edges[node_id]:
+                # We need to translate the peer id to a host id
+                host_id = (j // self.settings.peers_per_host) + 1  # Host id's are 1-based
+                if host_id not in sent_to:
+                    sent_to.add(host_id)
+                    self.send_model(host_id, json.dumps({'round': self.round, 'peer': node_id}).encode(),
+                                    serialized_model)
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
@@ -76,7 +85,7 @@ class NodeManager(Manager):
             self.logger.info("Received model while not expecting any")
             return
 
-        if self.round >= r:
+        if self.round > r:
             self.logger.info("Received model from previous round")
             return
 
@@ -94,9 +103,10 @@ class NodeManager(Manager):
         self.expecting_models -= 1
         if self.expecting_models == 0:
             for i in range(0, self.settings.peers_per_host):
-                self.nodes[i].aggregate()
-                accuracy = self.nodes[i].evaluate(self.test_data)
-                self.statistic_logger(f"accuracy_{i}", accuracy)
+                node_id = self.get_node_id(i)
+                self.nodes[node_id].aggregate()
+                accuracy = self.nodes[node_id].evaluate(self.test_data)
+                self.statistic_logger(f"accuracy_{node_id}", accuracy)
 
             self.expecting_models = len(self.receiving_from)
             self.round += 1

@@ -14,7 +14,7 @@ from experiments.decentralized_learning.sybil_manager import SybilManager
 
 class DLCommunity(Community):
     """
-    Main federated learning community.
+    Main decentralized learning community.
     """
     community_id = b"\x08\x07\xee\xa6\x97OgZ\xa1\x19\x14o\xfc\x87\xbe\x16/'Ka"
 
@@ -27,12 +27,15 @@ class DLCommunity(Community):
     def started(self):
         pass
 
-    def assign_node(self, peer_id: int, settings: Settings, experiment_module):
+    def assign_node(self, host_id: int, settings: Settings, experiment_module):
         # I am a node, my task is to train on our own data and send our model to the server. Then we wait for the
         # aggregated model and train this again.
-        self.manager = NodeManager(settings, peer_id, self.my_peer, self.send_model, experiment_module.autoplot_add_point)
+        self.manager = NodeManager(settings, host_id, self.my_peer, self.send_model,
+                                   experiment_module.autoplot_add_point)
+        for i in range(settings.peers_per_host):
+            self.experiment_module.autoplot_create(f"accuracy_{i}")
         self.experiment_module = experiment_module
-        self.register_task("start_lifecycle_" + str(peer_id), self.start_lifecycle, delay=0)
+        self.register_task("start_lifecycle_" + str(host_id), self.start_lifecycle, delay=0)
 
     def assign_sybil(self, peer_id: int, settings: Settings, experiment_module):
         # I am the adversary, my task is to poison the aggregated model

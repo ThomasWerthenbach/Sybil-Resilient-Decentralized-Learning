@@ -5,9 +5,8 @@ import torch
 from ipv8.types import Peer
 from torch.utils.data import DataLoader
 
+from experiments.decentralized_learning.manager import Manager
 from experiments.experiment_settings.settings import Settings
-from experiments.federated_learning.manager import Manager
-from ml.models.model import Model
 from ml.util import deserialize_model
 
 
@@ -18,6 +17,9 @@ class SybilManager(Manager):
     3. Wait for server to send the aggregated model
     4. Repeat
     """
+
+    def get_settings(self) -> Settings:
+        pass
 
     def __init__(self, settings: Settings, peer_id: int, send_model: Callable[[Peer, bytes, bytes], None]):
         self.peer_id = peer_id
@@ -42,12 +44,3 @@ class SybilManager(Manager):
         # 4.
         self.model = deserialize_model(model, self.settings)
         self.start_next_epoch()
-
-    def get_dataset(self) -> DataLoader:
-        return self.data
-
-    def get_model(self) -> Model:
-        return self.model
-
-    def get_settings(self) -> Settings:
-        return self.settings

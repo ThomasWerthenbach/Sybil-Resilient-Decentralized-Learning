@@ -30,6 +30,7 @@ class ServerManager(Manager):
         self.statistic_logger = statistic_logger
         self.expecting_models = settings.total_hosts * settings.peers_per_host
         self.rounds: Dict[int, Dict[Peer, List[int]]] = defaultdict(lambda: defaultdict(list))
+        self.previous_models: Dict[Peer, Dict[int, nn.Module]] = defaultdict(dict)
         self.models: Dict[Peer, Dict[int, nn.Module]] = defaultdict(dict)
         self.accumulated_update_history: Dict[Peer, Dict[int, nn.Module]] = defaultdict(dict)
         self.settings = settings
@@ -54,11 +55,13 @@ class ServerManager(Manager):
 
         # Store model properly
         model = deserialize_model(serialized_model, self.settings)
-        if p in self.models[host]:
-            difference = model_difference(self.models[host][p], model)
+        self.models[host][p] = model
+
+        # Calculate model difference
+        if p in self.previous_models[host]:
+            difference = model_difference(self.previous_models[host][p], model)
         else:
             difference = model
-        self.models[host][p] = model
 
         # Store model updates properly
         if p in self.accumulated_update_history[host]:
@@ -74,7 +77,8 @@ class ServerManager(Manager):
             history = reduce(add, map(lambda x: list(self.accumulated_update_history[x].values()), peers))
 
             result = self.aggregator.aggregate(models, history)
-            self.models.clear() # todo this will not work, as we need to keep them to calculate the deltas
+            self.previous_models = self.models
+            self.models = defaultdict(dict)
 
             result.eval()
             test_loss = 0

@@ -17,7 +17,6 @@ class NodeManager(Manager):
     def __init__(self, settings: Settings, peer_id: int, me: Peer, send_model: Callable[[Peer, bytes, bytes], None],
                  server: Peer, statistic_logger: Callable[[str, float], None]):
         super().__init__()
-        self.peer_id = peer_id
         self.me = me
         self.round = 0
         self.settings = settings

@@ -17,3 +17,4 @@ class Settings:
     # Experiment settings
     total_hosts: int
     peers_per_host: int
+    network_layout: str

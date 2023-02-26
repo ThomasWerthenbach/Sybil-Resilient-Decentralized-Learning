@@ -1,6 +1,7 @@
 from typing import Dict
 
 import torch
+import torch.nn.functional as F
 from torch import nn
 from torch.utils.data import DataLoader
 
@@ -75,4 +76,3 @@ class Node(BaseNode):
             torch.cuda.empty_cache()
 
         return test_acc
-

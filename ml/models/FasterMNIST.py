@@ -3,8 +3,8 @@ from typing import Type
 import torch.nn.functional as F
 from torch import nn
 
-from ml.datasets import MNISTDataset
-from ml.datasets import Dataset
+from ml.datasets.MNIST import MNISTDataset
+from ml.datasets.dataset import Dataset
 
 
 class MNIST(nn.Module):

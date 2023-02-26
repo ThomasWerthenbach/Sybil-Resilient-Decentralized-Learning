@@ -1,4 +1,5 @@
 import json
+import os
 from collections import defaultdict
 from typing import Callable, List, Dict, Set
 
@@ -34,7 +35,8 @@ class NodeManager(Manager):
         self.receiving_from: Set[int] = set()
 
         # Usage: self.adjacency_matrix[receiver][sender]
-        adjacency_matrix: List[List[int]] = pd.read_csv("100.csv").values.tolist()
+
+        adjacency_matrix: List[List[int]] = pd.read_csv(os.path.join(os.path.dirname(__file__), "100.csv")).values.tolist()
         for i in range(0, settings.peers_per_host):
             node_id = self.get_node_id(i)
 

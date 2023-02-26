@@ -4,7 +4,7 @@ import pickle
 import torch
 from torch import nn
 
-from experiments.experiment_settings.settings import Settings
+from experiment_infrastructure.experiment_settings.settings import Settings
 
 
 def model_difference(prior_model: nn.Module, new_model: nn.Module) -> nn.Module:

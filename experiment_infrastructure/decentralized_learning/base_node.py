@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 import torch
 from torch.utils.data import DataLoader
 
-from experiments.experiment_settings.settings import Settings
+from experiment_infrastructure.experiment_settings.settings import Settings
 from ml.models.model import Model
 import torch.nn.functional as F
 

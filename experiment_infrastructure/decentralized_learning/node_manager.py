@@ -7,9 +7,9 @@ import pandas as pd
 import torch.cuda
 from ipv8.types import Peer
 
-from experiments.decentralized_learning.manager import Manager
-from experiments.decentralized_learning.node import Node
-from experiments.experiment_settings.settings import Settings
+from experiment_infrastructure.decentralized_learning.manager import Manager
+from experiment_infrastructure.decentralized_learning.node import Node
+from experiment_infrastructure.experiment_settings.settings import Settings
 from ml.models.model import Model
 from ml.util import serialize_model, deserialize_model
 

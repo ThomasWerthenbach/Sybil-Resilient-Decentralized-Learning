@@ -5,8 +5,8 @@ import torch.nn.functional as F
 from torch import nn
 from torch.utils.data import DataLoader
 
-from experiments.decentralized_learning.base_node import BaseNode
-from experiments.experiment_settings.settings import Settings
+from experiment_infrastructure.decentralized_learning.base_node import BaseNode
+from experiment_infrastructure.experiment_settings.settings import Settings
 from ml.aggregators.aggregator import Aggregator
 from ml.models.model import Model
 from ml.util import model_difference, model_sum

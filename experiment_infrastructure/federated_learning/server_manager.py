@@ -9,8 +9,8 @@ import torch.nn.functional as F
 from ipv8.types import Peer
 from torch import nn
 
-from experiments.experiment_settings.settings import Settings
-from experiments.federated_learning.manager import Manager
+from experiment_infrastructure.experiment_settings.settings import Settings
+from experiment_infrastructure.federated_learning.manager import Manager
 from ml.aggregators.aggregator import Aggregator
 from ml.models.model import Model
 from ml.util import deserialize_model, serialize_model, model_difference, model_sum

@@ -6,10 +6,10 @@ from ipv8.community import Community
 
 from communication.util.eva.protocol import EVAProtocol
 from communication.util.eva.result import TransferResult
-from experiments.experiment_settings.settings import Settings
-from experiments.decentralized_learning.manager import Manager
-from experiments.decentralized_learning.node_manager import NodeManager
-from experiments.decentralized_learning.sybil_manager import SybilManager
+from experiment_infrastructure.experiment_settings.settings import Settings
+from experiment_infrastructure.decentralized_learning.manager import Manager
+from experiment_infrastructure.decentralized_learning.node_manager import NodeManager
+from experiment_infrastructure.decentralized_learning.sybil_manager import SybilManager
 
 
 class DLCommunity(Community):

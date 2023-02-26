@@ -7,11 +7,11 @@ from ipv8.types import Peer
 
 from communication.util.eva.protocol import EVAProtocol
 from communication.util.eva.result import TransferResult
-from experiments.experiment_settings.settings import Settings
-from experiments.federated_learning.manager import Manager
-from experiments.federated_learning.node_manager import NodeManager
-from experiments.federated_learning.server_manager import ServerManager
-from experiments.federated_learning.sybil_manager import SybilManager
+from experiment_infrastructure.experiment_settings.settings import Settings
+from experiment_infrastructure.federated_learning.manager import Manager
+from experiment_infrastructure.federated_learning.node_manager import NodeManager
+from experiment_infrastructure.federated_learning.server_manager import ServerManager
+from experiment_infrastructure.federated_learning.sybil_manager import SybilManager
 
 
 class FLCommunity(Community):

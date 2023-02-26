@@ -5,8 +5,8 @@ import torch
 from ipv8.types import Peer
 from torch.utils.data import DataLoader
 
-from experiments.decentralized_learning.manager import Manager
-from experiments.experiment_settings.settings import Settings
+from experiment_infrastructure.decentralized_learning.manager import Manager
+from experiment_infrastructure.experiment_settings.settings import Settings
 from ml.util import deserialize_model
 
 

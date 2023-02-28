@@ -37,7 +37,7 @@ class FLCommunity(Community):
     def assign_node(self, peer_id: int, server: Peer, settings: Settings, experiment_module):
         # I am a node, my task is to train on our own data and send our model to the server. Then we wait for the
         # aggregated model and train this again.
-        self.manager = NodeManager(settings, peer_id, self.my_peer, lambda info, model: self.send_model(server, info, model), server, experiment_module.autoplot_add_point)
+        self.manager = NodeManager(settings, peer_id, lambda info, model: self.send_model(server, info, model))
         self.experiment_module = experiment_module
         self.register_task("start_lifecycle_" + str(peer_id), self.start_lifecycle, delay=0)
 

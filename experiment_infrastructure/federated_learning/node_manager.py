@@ -5,6 +5,7 @@ from typing import Callable, List
 import torch.cuda
 from ipv8.types import Peer
 
+from experiment_infrastructure.attacks.attack import Attack
 from experiment_infrastructure.experiment_settings.settings import Settings
 from experiment_infrastructure.federated_learning.base_node import BaseNode
 from experiment_infrastructure.federated_learning.manager import Manager
@@ -16,14 +17,11 @@ from ml.util import serialize_model, deserialize_model
 
 class NodeManager(Manager):
 
-    def __init__(self, settings: Settings, peer_id: int, me: Peer, send_model: Callable[[bytes, bytes], None],
-                 server: Peer, statistic_logger: Callable[[str, float], None]):
+    def __init__(self, settings: Settings, peer_id: int, send_model: Callable[[bytes, bytes], None]):
         super().__init__()
-        self.me = me
         self.round = 0
         self.settings = settings
         self.send_model = send_model
-        self.server = server
         self.nodes: List[BaseNode] = list()
         for i in range(settings.peers_per_host):
             model = Model.get_model_class(settings.model)()
@@ -33,7 +31,8 @@ class NodeManager(Manager):
                     .get_peer_dataset(settings.peers_per_host * (peer_id - 2) + i,
                                       # peer_id - 2, as peer_id's are 1-based and the server has id 1
                                       settings.total_hosts * settings.peers_per_host,
-                                      settings.non_iid)
+                                      settings.non_iid,
+                                      sybil_data_transformer=Attack.get_attack_class(settings.sybil_attack)())
                 self.nodes.append(Sybil(model, data, settings, i))
             else:
                 # Honest node
@@ -43,7 +42,6 @@ class NodeManager(Manager):
                                       settings.total_hosts * settings.peers_per_host,
                                       settings.non_iid)
                 self.nodes.append(Node(model, data, settings, i))
-        self.statistic_logger = statistic_logger
 
     def start_next_epoch(self) -> None:
         for node in self.nodes:
@@ -58,7 +56,6 @@ class NodeManager(Manager):
         if self.round >= r:
             # We already received a model during this round.
             return
-        self.logger.info(f"Node {self.me} received model from server {peer_pk} with hash {hash(model)}")
         self.round = r
         model = deserialize_model(model, self.settings)
         for node in self.nodes:

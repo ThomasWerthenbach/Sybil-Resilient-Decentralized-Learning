@@ -3,6 +3,8 @@ from abc import ABC, abstractmethod
 
 from torch.utils.data import DataLoader
 
+from experiment_infrastructure.attacks.attack import Attack
+
 
 class Dataset(ABC):
     NUM_CLASSES = None
@@ -15,7 +17,8 @@ class Dataset(ABC):
         """
 
     @abstractmethod
-    def get_peer_dataset(self, peer_id: int, total_peers: int, non_iid, sizes=None) -> DataLoader:
+    def get_peer_dataset(self, peer_id: int, total_peers: int, non_iid, sizes=None,
+                         sybil_data_transformer: Attack = None) -> DataLoader:
         """
         Function to load the training set
         """

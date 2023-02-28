@@ -3,7 +3,7 @@ from ml.datasets.partitioner import Partition
 
 
 class LabelFlip(Attack):
-    def __init__(self, f: int, t: int):
+    def __init__(self, f: int = 0, t: int = 1):
         self.f = f
         self.t = t
 

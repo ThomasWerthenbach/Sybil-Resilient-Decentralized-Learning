@@ -3,8 +3,8 @@ from typing import List
 from torch import nn
 from torch.utils.data import DataLoader
 
-from base_node import BaseNode
 from experiment_infrastructure.experiment_settings.settings import Settings
+from experiment_infrastructure.federated_learning.base_node import BaseNode
 from ml.models.model import Model
 
 

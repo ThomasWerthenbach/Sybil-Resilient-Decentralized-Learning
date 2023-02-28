@@ -4,6 +4,7 @@ import torchvision
 from torch.utils.data import DataLoader
 from torchvision.transforms import ToTensor
 
+from experiment_infrastructure.attacks.attack import Attack
 from ml.datasets.dataset import Dataset
 from ml.datasets.partitioner import DataPartitioner, DirichletDataPartitioner
 
@@ -17,7 +18,8 @@ class MNISTDataset(Dataset):
             root=self.DEFAULT_DATA_DIR + '/train', train=True, download=True, transform=ToTensor(),
         ), batch_size=batch_size, shuffle=shuffle)
 
-    def get_peer_dataset(self, peer_id: int, total_peers: int, non_iid=False, sizes=None, batch_size=8, shuffle=False):
+    def get_peer_dataset(self, peer_id: int, total_peers: int, non_iid=False, sizes=None, batch_size=8, shuffle=False,
+                         sybil_data_transformer: Attack = None):
         self.logger.info(f"Initializing dataset of size {1.0 / total_peers} for peer {peer_id}. Non-IID: {non_iid}")
         if sizes is None:
             sizes = [1.0 / total_peers for _ in range(total_peers)]
@@ -27,9 +29,19 @@ class MNISTDataset(Dataset):
         if not non_iid:
             train_set = DataPartitioner(data, sizes).use(peer_id)
         else:
+            # train_data = {key: [] for key in range(10)}
+            # for x, y in data:
+            #     train_data[y].append(x)
+            # all_trainset = []
+            # for y, x in train_data.items():
+            #     all_trainset.extend([(a, y) for a in x])
             train_set = DirichletDataPartitioner(
                 data, sizes
             ).use(peer_id)
+
+        if sybil_data_transformer is not None:
+            train_set = sybil_data_transformer.transform_data(train_set)
+
         return DataLoader(train_set, batch_size=batch_size, shuffle=shuffle)
 
     def all_test_data(self, batch_size=32, shuffle=False):

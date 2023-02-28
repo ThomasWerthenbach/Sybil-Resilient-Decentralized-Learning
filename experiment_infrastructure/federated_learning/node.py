@@ -22,7 +22,7 @@ class Node(BaseNode):
     def start_next_epoch(self) -> None:
         self.train(self.model, self.data, self.settings)
 
-    def get_id(self) -> List[int]:
+    def get_ids(self) -> List[int]:
         return [self.id]
 
     def set_model(self, model: nn.Module):

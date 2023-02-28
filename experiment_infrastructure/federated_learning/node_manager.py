@@ -6,8 +6,10 @@ import torch.cuda
 from ipv8.types import Peer
 
 from experiment_infrastructure.experiment_settings.settings import Settings
+from experiment_infrastructure.federated_learning.base_node import BaseNode
 from experiment_infrastructure.federated_learning.manager import Manager
 from experiment_infrastructure.federated_learning.node import Node
+from experiment_infrastructure.federated_learning.sybil import Sybil
 from ml.models.model import Model
 from ml.util import serialize_model, deserialize_model
 
@@ -22,23 +24,32 @@ class NodeManager(Manager):
         self.settings = settings
         self.send_model = send_model
         self.server = server
-        self.nodes: List[Node] = list()
+        self.nodes: List[BaseNode] = list()
         for i in range(settings.peers_per_host):
             model = Model.get_model_class(settings.model)()
-            data = model.get_dataset_class()() \
-                .get_peer_dataset(settings.peers_per_host * (peer_id - 2) + i,
-                                  # peer_id - 2, as peer_id's are 1-based and the server has id 1
-                                  settings.total_hosts * settings.peers_per_host,
-                                  settings.non_iid)
-            self.nodes.append(Node(model, data, settings, i))
+            if settings.sybil_amount > 0 and peer_id == settings.total_hosts and i == settings.peers_per_host - 1:
+                # Sybil node
+                data = model.get_dataset_class()() \
+                    .get_peer_dataset(settings.peers_per_host * (peer_id - 2) + i,
+                                      # peer_id - 2, as peer_id's are 1-based and the server has id 1
+                                      settings.total_hosts * settings.peers_per_host,
+                                      settings.non_iid)
+                self.nodes.append(Sybil(model, data, settings, i))
+            else:
+                # Honest node
+                data = model.get_dataset_class()() \
+                    .get_peer_dataset(settings.peers_per_host * (peer_id - 2) + i,
+                                      # peer_id - 2, as peer_id's are 1-based and the server has id 1
+                                      settings.total_hosts * settings.peers_per_host,
+                                      settings.non_iid)
+                self.nodes.append(Node(model, data, settings, i))
         self.statistic_logger = statistic_logger
 
     def start_next_epoch(self) -> None:
         for node in self.nodes:
             node.start_next_epoch()
-            for model in node.get_models():
-                self.send_model(json.dumps({'round': self.round, 'peer': node.get_id()}).encode(),
-                                serialize_model(model))
+            for model, _id in zip(node.get_models(), node.get_ids()):
+                self.send_model(json.dumps({'round': self.round, 'peer': _id}).encode(), serialize_model(model))
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 

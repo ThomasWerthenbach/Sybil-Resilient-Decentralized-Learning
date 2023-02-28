@@ -24,7 +24,11 @@ class BaseNode(ABC):
         ...
 
     @abstractmethod
-    def get_id(self) -> List[int]:
+    def get_ids(self) -> List[int]:
+        ...
+
+    @abstractmethod
+    def set_model(self, model: nn.Module) -> None:
         ...
 
     def train(self, model: nn.Module, dataset: DataLoader, settings: Settings) -> None:

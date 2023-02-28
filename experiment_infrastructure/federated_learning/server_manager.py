@@ -30,7 +30,7 @@ class ServerManager(Manager):
         self.send_model = send_model
         self.round = 0
         self.statistic_logger = statistic_logger
-        self.expecting_models = settings.total_hosts * settings.peers_per_host
+        self.expecting_models = settings.total_hosts * settings.peers_per_host + settings.sybil_amount
         self.rounds: Dict[int, Dict[Peer, List[int]]] = defaultdict(lambda: defaultdict(list))
         self.previous_models: Dict[Peer, Dict[int, nn.Module]] = defaultdict(dict)
         self.models: Dict[Peer, Dict[int, nn.Module]] = defaultdict(dict)
@@ -82,7 +82,7 @@ class ServerManager(Manager):
 
         # Perform aggregation if all models are received
         if self.expecting_models == 0:
-            self.expecting_models = self.settings.total_hosts * self.settings.peers_per_host
+            self.expecting_models = self.settings.total_hosts * self.settings.peers_per_host + self.settings.sybil_amount
             peers = list(self.models.keys())
             models = reduce(add, map(lambda x: list(self.models[x].values()), peers))
             history = reduce(add, map(lambda x: list(self.accumulated_update_history[x].values()), peers))

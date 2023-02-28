@@ -38,7 +38,7 @@ class SybilManager(Manager):
         # self.send_model(server, b'', serialize_model(self.model))
         # 3.
 
-    def receive_model(self, peer_pk: Peer, model: bytes):
+    def receive_model(self, peer_pk: Peer, info: bytes, model: bytes):
         # 4.
         self.model = deserialize_model(model, self.settings)
         self.start_next_epoch()

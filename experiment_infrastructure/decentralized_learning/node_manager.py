@@ -106,7 +106,7 @@ class NodeManager(Manager):
                 node_id = self.get_node_id(i)
                 self.nodes[node_id].aggregate()
                 accuracy = self.nodes[node_id].evaluate(self.test_data)
-                self.statistic_logger(f"accuracy_{node_id}", accuracy)
+                self.statistic_logger(f"accuracy_{i}", accuracy)
 
             self.expecting_models = len(self.receiving_from)
             self.round += 1

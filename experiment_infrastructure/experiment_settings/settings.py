@@ -18,3 +18,6 @@ class Settings:
     total_hosts: int
     peers_per_host: int
     network_layout: str
+
+    # Sybil settings
+    sybil_amount: int

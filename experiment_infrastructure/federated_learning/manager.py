@@ -15,7 +15,7 @@ class Manager:
         self.logger = logging.getLogger(self.__class__.__name__)
 
     @abstractmethod
-    def receive_model(self, peer_pk: Peer, info: bytes, delta: bytes):
+    def receive_model(self, peer_pk: Peer, info: bytes, model: bytes):
         pass
 
     @abstractmethod

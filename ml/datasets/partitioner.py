@@ -1,5 +1,7 @@
 from random import Random
 
+import numpy as np
+
 """ Adopted from https://github.com/devos50/decentralized-learning """
 
 
@@ -150,3 +152,54 @@ class KShardDataPartitioner(DataPartitioner):
                     index_start = indexes[:start]
                     index_start.extend(indexes[start + part_len :])
                     indexes = index_start
+
+class DirichletDataPartitioner(DataPartitioner):
+    """
+    Class to partition the dataset using Dirichlet Function
+    """
+
+    def __init__(self, data, sizes=[1.0], seed=1235, alpha=0.1, validation_set=False, num_classes=10):
+        """
+        Constructor. Partitions the data according the parameters
+        Parameters
+        ----------
+        data : indexable
+            An indexable list of data items
+        sizes : list(float)
+            A list of fractions for each process
+        shards : int
+            Number of shards to allot to process
+        seed : int, optional
+            Seed for generating a random subset
+        alpha : float
+            Degree of heterogeneity. Lower is more heterogeneous.
+        Code below modified from https://github.com/gong-xuan/FedKD/blob/master/dataset/data_cifar.py#L30
+        """
+        self.validation_set = validation_set
+        self.data = data
+        self.num_classes = num_classes
+        num_peers = len(sizes)
+
+        self.partitions = [None] * num_peers
+        np.random.seed(seed)
+        split_arr = np.random.dirichlet([alpha] * num_peers, num_classes)
+        for cls_idx in range(num_classes):
+            idx = np.where(np.asarray(data.targets) == cls_idx)[0]
+            totaln = idx.shape[0]
+            idx_start = 0
+            for i in range(num_peers):
+                if i == num_peers - 1:
+                    cur_idx = idx[idx_start:]
+                else:
+                    idx_end = idx_start + int(split_arr[cls_idx][i] * totaln)
+                    cur_idx = idx[idx_start: idx_end]
+                    idx_start = idx_end
+                if cur_idx == ():
+                    continue
+                if self.partitions[i] is None:
+                    self.partitions[i] = cur_idx
+                else:
+                    self.partitions[i] = np.r_[(self.partitions[i], cur_idx)]
+
+        for i in range(len(self.partitions)):
+            self.partitions[i] = list(self.partitions[i])

@@ -1,5 +1,9 @@
+import copy
 import json
 import os
+from collections import defaultdict
+from functools import reduce
+from operator import add
 from typing import List
 
 import torch
@@ -11,15 +15,34 @@ from torchvision.transforms import ToTensor
 from experiment_infrastructure.attacks.label_flip import LabelFlip
 from experiment_infrastructure.experiment_settings.settings import Settings
 from experiment_infrastructure.federated_learning.node_manager import NodeManager
+from ml.aggregators.foolsgold import FoolsGold
 from ml.aggregators.util import weighted_average
-from ml.util import deserialize_model, serialize_model
+from ml.datasets.MNIST import MNISTDataset
+from ml.util import deserialize_model, serialize_model, model_difference, model_sum
 
-models = list()
+models =defaultdict(dict)
+previous_models = defaultdict(dict)
+accumulated_update_history = defaultdict(dict)
 
+def send_model(info: bytes, serialized_model: bytes):
+    info = json.loads(info.decode())
+    p = info['peer']
 
-def send_model(info: bytes, model: bytes):
-    global models
-    models.append(deserialize_model(model, s))
+    # Store model properly
+    model = deserialize_model(serialized_model, s)
+    models[host][p] = model
+
+    # Calculate model difference
+    if p in previous_models[host]:
+        difference = model_difference(previous_models[host][p], model)
+    else:
+        difference = model
+
+    # Store model updates properly
+    if p in accumulated_update_history[host]:
+        accumulated_update_history[host][p] = model_sum(accumulated_update_history[host][p], difference)
+    else:
+        accumulated_update_history[host][p] = difference
 
 
 if __name__ == '__main__':
@@ -32,6 +55,8 @@ if __name__ == '__main__':
     hosts: List[NodeManager] = list()
     for i in range(s.total_hosts):
         hosts.append(NodeManager(s, i + 1, send_model))
+
+    foolsgold = FoolsGold()
 
     data = torchvision.datasets.MNIST(
         root='C:\\Users\\takwe\\tu\\Repple\\data\\test', train=False, download=True, transform=ToTensor()
@@ -62,7 +87,13 @@ if __name__ == '__main__':
         print("TRAINING DONE ================================ CALCULATING ATTACK RATE")
         print("Models has a length of: ", len(models))
 
-        average_model = weighted_average(models, [1.0 / len(models) for _ in range(len(models))])
+        # average_model = weighted_average(models, [1.0 / len(models) for _ in range(len(models))])
+
+        peers = list(models.keys())
+        m = reduce(add, map(lambda x: list(models[x].values()), peers))
+        h = reduce(add, map(lambda x: list(accumulated_update_history[x].values()), peers))
+        average_model = foolsgold.aggregate(m, h)
+        previous_models = copy.deepcopy(models)
         models.clear()
 
         average_model.eval()

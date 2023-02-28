@@ -42,10 +42,9 @@ class ServerManager(Manager):
         if settings.sybil_amount > 0:
             attack_data = list()
             attack = LabelFlip()
-            for bx, by in self.data.dataset:
-                for x, y in zip(bx, by):
-                    if y == attack.f:
-                        attack_data.append((x, attack.t))
+            for x, y in self.data.dataset:
+                if y == attack.f:
+                    attack_data.append((x, attack.t))
 
             self.attack_rate_data = DataLoader(attack_data, batch_size=120, shuffle=False)
 

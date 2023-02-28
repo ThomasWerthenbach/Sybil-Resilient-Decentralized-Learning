@@ -8,7 +8,9 @@ import torch
 import torch.nn.functional as F
 from ipv8.types import Peer
 from torch import nn
+from torch.utils.data import DataLoader
 
+from experiment_infrastructure.attacks.label_flip import LabelFlip
 from experiment_infrastructure.experiment_settings.settings import Settings
 from experiment_infrastructure.federated_learning.manager import Manager
 from ml.aggregators.aggregator import Aggregator
@@ -36,6 +38,16 @@ class ServerManager(Manager):
         self.settings = settings
         self.data = Model.get_model_class(settings.model)().get_dataset_class()().all_test_data(120)
         self.aggregator: Aggregator = Aggregator.get_aggregator_class(settings.aggregator)()
+
+        if settings.sybil_amount > 0:
+            attack_data = list()
+            attack = LabelFlip()
+            for bx, by in self.data.dataset:
+                for x, y in zip(bx, by):
+                    if y == attack.f:
+                        attack_data.append((x, attack.t))
+
+            self.attack_rate_data = DataLoader(attack_data, batch_size=120, shuffle=False)
 
     def receive_model(self, host: Peer, info: bytes, serialized_model: bytes):
         info = json.loads(info.decode())
@@ -80,11 +92,12 @@ class ServerManager(Manager):
             self.previous_models = self.models
             self.models = defaultdict(dict)
 
+            device_name = "cuda" if torch.cuda.is_available() else "cpu"
+            device = torch.device(device_name)
+
             result.eval()
             test_loss = 0
             test_corr = 0
-            device_name = "cuda" if torch.cuda.is_available() else "cpu"
-            device = torch.device(device_name)
             result.to(device)
             with torch.no_grad():
                 for data, target in self.data:
@@ -98,6 +111,22 @@ class ServerManager(Manager):
             self.logger.info('Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(
                 test_loss, test_corr, len(self.data) * 120, test_acc))
             self.statistic_logger("accuracy", test_acc)
+
+            if self.settings.sybil_amount > 0:
+                test_loss = 0
+                test_corr = 0
+                with torch.no_grad():
+                    for data, target in self.attack_rate_data:
+                        data, target = data.to(device), target.to(device)
+                        output = result(data)
+                        test_loss += F.nll_loss(output, target, reduction='sum').item()
+                        pred = output.argmax(dim=1, keepdim=True)
+                        test_corr += pred.eq(target.view_as(pred)).sum().item()
+                test_loss /= len(self.attack_rate_data)
+                test_acc = 100. * test_corr / (len(self.attack_rate_data) * 120)
+                self.logger.info('Attack rate test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(
+                    test_loss, test_corr, len(self.attack_rate_data) * 120, test_acc))
+                self.statistic_logger("attack_rate", test_acc)
 
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()

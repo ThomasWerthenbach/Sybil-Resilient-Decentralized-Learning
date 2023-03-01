@@ -29,18 +29,14 @@ class MNISTDataset(Dataset):
         if not non_iid:
             train_set = DataPartitioner(data, sizes).use(peer_id)
         else:
-            # train_data = {key: [] for key in range(10)}
-            # for x, y in data:
-            #     train_data[y].append(x)
-            # all_trainset = []
-            # for y, x in train_data.items():
-            #     all_trainset.extend([(a, y) for a in x])
             train_set = DirichletDataPartitioner(
                 data, sizes
             ).use(peer_id)
-
         if sybil_data_transformer is not None:
-            train_set = sybil_data_transformer.transform_data(train_set)
+            train_data = {key: [] for key in range(10)}
+            for x, y in data:
+                train_data[y].append(x)
+            train_set = sybil_data_transformer.transform_data(train_set, train_data, sizes, peer_id)
 
         return DataLoader(train_set, batch_size=batch_size, shuffle=shuffle)
 

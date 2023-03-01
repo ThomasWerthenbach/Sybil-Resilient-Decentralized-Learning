@@ -6,7 +6,7 @@ from ml.datasets.partitioner import Partition
 
 class Attack(ABC):
     @abstractmethod
-    def transform_data(self, data: Partition) -> Partition:
+    def transform_data(self, data: Partition, trainset, sizes, peer_id) -> Partition:
         ...
 
     @staticmethod

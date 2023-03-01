@@ -15,4 +15,7 @@ class Aggregator(ABC):
         if name == 'average':
             from ml.aggregators.average import Average
             return Average
+        elif name == 'foolsgold':
+            from ml.aggregators.foolsgold import FoolsGold
+            return FoolsGold
         raise NotImplementedError(f"No aggregator found for {name}")

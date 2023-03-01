@@ -64,6 +64,8 @@ class FoolsGold(Aggregator):
             wv[(wv < 0)] = 0
 
             # todo krum
+            # Ensure that sum of weights is 1
+            wv = wv / np.sum(wv)
 
             # Apply the weight vector on this delta
             return weighted_average(models, wv)

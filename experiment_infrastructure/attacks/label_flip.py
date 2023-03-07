@@ -1,11 +1,20 @@
 import random
 from typing import List, Dict
 
+from torch.utils.data import DataLoader
+
 from experiment_infrastructure.attacks.attack import Attack
 from ml.datasets.partitioner import Partition, DataPartitioner
 
 
 class LabelFlip(Attack):
+    def transform_eval_data(self, eval_data: DataLoader):
+        attack_data = list()
+        for x, y in eval_data.dataset:
+            if y == self.f:
+                attack_data.append((x, self.t))
+        return DataLoader(attack_data, batch_size=120, shuffle=False)
+
     def __init__(self, f: int = 0, t: int = 1, seed=42):
         self.f = f
         self.t = t

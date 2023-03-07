@@ -8,9 +8,8 @@ import torch
 import torch.nn.functional as F
 from ipv8.types import Peer
 from torch import nn
-from torch.utils.data import DataLoader
 
-from experiment_infrastructure.attacks.label_flip import LabelFlip
+from experiment_infrastructure.attacks.attack import Attack
 from experiment_infrastructure.experiment_settings.settings import Settings
 from experiment_infrastructure.federated_learning.manager import Manager
 from ml.aggregators.aggregator import Aggregator
@@ -40,13 +39,8 @@ class ServerManager(Manager):
         self.aggregator: Aggregator = Aggregator.get_aggregator_class(settings.aggregator)()
 
         if settings.sybil_amount > 0:
-            attack_data = list()
-            attack = LabelFlip()
-            for x, y in self.data.dataset:
-                if y == attack.f:
-                    attack_data.append((x, attack.t))
-
-            self.attack_rate_data = DataLoader(attack_data, batch_size=120, shuffle=False)
+            attack = Attack.get_attack_class(settings.sybil_attack)()
+            self.attack_rate_data = attack.transform_eval_data(self.data)
 
     def receive_model(self, host: Peer, info: bytes, serialized_model: bytes):
         info = json.loads(info.decode())

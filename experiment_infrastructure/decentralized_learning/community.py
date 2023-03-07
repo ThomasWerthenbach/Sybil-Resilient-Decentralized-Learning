@@ -9,7 +9,6 @@ from communication.util.eva.result import TransferResult
 from experiment_infrastructure.experiment_settings.settings import Settings
 from experiment_infrastructure.decentralized_learning.manager import Manager
 from experiment_infrastructure.decentralized_learning.node_manager import NodeManager
-from experiment_infrastructure.decentralized_learning.sybil_manager import SybilManager
 
 
 class DLCommunity(Community):
@@ -35,11 +34,8 @@ class DLCommunity(Community):
         self.experiment_module = experiment_module
         for i in range(settings.peers_per_host):
             self.experiment_module.autoplot_create(f"accuracy_{i}")
+            self.experiment_module.autoplot_create(f"attack_rate_{i}")
         self.register_task("start_lifecycle_" + str(host_id), self.start_lifecycle, delay=0)
-
-    def assign_sybil(self, peer_id: int, settings: Settings, experiment_module):
-        # I am the adversary, my task is to poison the aggregated model
-        self.manager = SybilManager(settings, peer_id, self.send_model)
 
     def log(self, message: str):
         self.logger.info(message)

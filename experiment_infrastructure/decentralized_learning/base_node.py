@@ -1,7 +1,9 @@
 import logging
 from abc import ABC, abstractmethod
+from typing import List, Tuple
 
 import torch
+from torch import nn
 from torch.utils.data import DataLoader
 
 from experiment_infrastructure.experiment_settings.settings import Settings
@@ -14,10 +16,30 @@ class BaseNode(ABC):
         self.logger = logging.getLogger(self.__class__.__name__)
 
     @abstractmethod
-    def receive_model(self, serialized_model: bytes, peer: int):
-        pass
+    def receive_model(self, model: nn.Module, peer: int) -> None:
+        ...
 
-    def train(self, model: Model, dataset: DataLoader, settings: Settings) -> Model:
+    @abstractmethod
+    def get_models(self) -> List[Model]:
+        ...
+
+    @abstractmethod
+    def start_next_epoch(self) -> None:
+        ...
+
+    @abstractmethod
+    def get_ids(self) -> List[int]:
+        ...
+
+    @abstractmethod
+    def aggregate(self) -> None:
+        ...
+
+    @abstractmethod
+    def evaluate(self, test_data: DataLoader) -> Tuple[float, float]:
+        ...
+
+    def train(self, model: Model, dataset: DataLoader, settings: Settings):
         """
         Train the model for one epoch
         """
@@ -46,4 +68,3 @@ class BaseNode(ABC):
                 train_loss += F.nll_loss(outputs, labels, reduction='sum').item()
                 loss.backward()
                 optimizer.step()
-        return model

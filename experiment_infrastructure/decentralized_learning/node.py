@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List, Tuple
 
 import torch
 import torch.nn.functional as F
@@ -13,11 +13,12 @@ from ml.util import model_difference, model_sum
 
 
 class Node(BaseNode):
-    def __init__(self, model: Model, dataset: DataLoader, settings: Settings):
+    def __init__(self, model: Model, dataset: DataLoader, settings: Settings, node_id: int):
         super().__init__()
         self.model = model
         self.dataset = dataset
         self.settings = settings
+        self.node_id = node_id
 
         self.models: Dict[int, nn.Module] = dict()
         self.previous_models: Dict[int, nn.Module] = dict()
@@ -42,8 +43,8 @@ class Node(BaseNode):
         else:
             self.accumulated_update_history[peer] = difference
 
-    def start_next_epoch(self) -> Model:
-        return self.train(self.model, self.dataset, self.settings)
+    def start_next_epoch(self) -> None:
+        self.train(self.model, self.dataset, self.settings)
 
     def aggregate(self) -> None:
         peers = list(self.models.keys())
@@ -53,26 +54,47 @@ class Node(BaseNode):
         self.previous_models = self.models
         self.models = dict()
 
-    def evaluate(self, test_data: DataLoader) -> float:
-        self.model.eval()
-        test_loss = 0
-        test_corr = 0
-        device_name = "cuda" if torch.cuda.is_available() else "cpu"
-        device = torch.device(device_name)
-        self.model.to(device)
+    def evaluate(self, test_data: DataLoader) -> Tuple[float, float]:
         with torch.no_grad():
+            self.model.eval()
+            test_loss = 0
+            test_corr = 0
+            device_name = "cuda" if torch.cuda.is_available() else "cpu"
+            device = torch.device(device_name)
+            self.model.to(device)
             for data, target in test_data:
                 data, target = data.to(device), target.to(device)
                 output = self.model(data)
                 test_loss += F.nll_loss(output, target, reduction='sum').item()
                 pred = output.argmax(dim=1, keepdim=True)
                 test_corr += pred.eq(target.view_as(pred)).sum().item()
-        test_loss /= len(test_data)
-        test_acc = 100. * test_corr / (len(test_data) * 120)
-        self.logger.info('Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(
-            test_loss, test_corr, len(test_data) * 120, test_acc))
+            test_loss /= len(test_data)
+            test_acc = 100. * test_corr / (len(test_data) * 120)
+            self.logger.info('Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(
+                test_loss, test_corr, len(test_data) * 120, test_acc))
 
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
 
-        return test_acc
+            test_att = 0.0
+            if self.settings.sybil_amount > 0:
+                test_loss = 0
+                test_corr = 0
+                for data, target in test_data:
+                    data, target = data.to(device), target.to(device)
+                    output = self.model(data)
+                    test_loss += F.nll_loss(output, target, reduction='sum').item()
+                    pred = output.argmax(dim=1, keepdim=True)
+                    test_corr += pred.eq(target.view_as(pred)).sum().item()
+                test_loss /= len(test_data)
+                test_att = 100. * test_corr / (len(test_data) * 120)
+                self.logger.info('Attack rate test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(
+                    test_loss, test_corr, len(test_data) * 120, test_att))
+
+            return test_acc, test_att
+
+    def get_models(self) -> List[Model]:
+        return [self.model]
+
+    def get_ids(self) -> List[int]:
+        return [self.node_id]

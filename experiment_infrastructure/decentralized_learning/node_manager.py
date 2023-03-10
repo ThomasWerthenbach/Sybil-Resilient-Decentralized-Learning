@@ -19,16 +19,21 @@ from ml.util import serialize_model, deserialize_model
 
 class NodeManager(Manager):
 
-    def __init__(self, settings: Settings, peer_id: int, me: Peer, send_model: Callable[[int, bytes, bytes], None],
+    def __init__(self, settings: Settings, peer_id: int, me: Peer, send_model: Callable[[Peer, int, bytes, bytes], None],
                  statistic_logger: Callable[[str, float], None]):
         super().__init__()
         self.peer_id = peer_id
         self.me = me
         self.round = 0
         self.settings = settings
+        self.done_training = False
         self.send_model = send_model
         self.statistic_logger = statistic_logger
         self.test_data = Model.get_model_class(settings.model)().get_dataset_class()().all_test_data(120)
+        self.attack_data = None
+        if settings.sybil_amount > 0:
+            attack = Attack.get_attack_class(settings.sybil_attack)()
+            self.attack_rate_data = attack.transform_eval_data(self.test_data)
         self.rounds: Dict[int, Dict[Peer, List[int]]] = defaultdict(lambda: defaultdict(list))
 
         self.edges: Dict[int, List[int]] = defaultdict(list)
@@ -54,7 +59,7 @@ class NodeManager(Manager):
                                       settings.total_hosts * settings.peers_per_host,
                                       settings.non_iid,
                                       sybil_data_transformer=Attack.get_attack_class(settings.sybil_attack)())
-                self.nodes[node_id] = Sybil(model, dataset, settings, i)
+                self.nodes[node_id] = Sybil(model, dataset, settings, node_id)
 
                 for sybil_id in self.nodes[node_id].get_ids():
                     all_peers = adjacency_matrix[sybil_id]
@@ -78,7 +83,7 @@ class NodeManager(Manager):
     def start_next_epoch(self) -> None:
         for i in range(self.settings.peers_per_host):
             node = self.nodes[self.get_node_id(i)]
-            node.start_next_epoch()
+            node.start_next_epoch(self.round)
 
             for model, _id in zip(node.get_models(), node.get_ids()):
                 sent_to = set()
@@ -89,10 +94,27 @@ class NodeManager(Manager):
                     # Sybils will live on the host with the highest ID
                     if host_id not in sent_to:
                         sent_to.add(host_id)
-                        self.send_model(host_id, json.dumps({'round': self.round, 'peer': _id}).encode(),
+                        self.send_model(self.me, host_id, json.dumps({'round': self.round, 'peer': _id}).encode(),
                                         serialize_model(model))
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
+        self.done_training = True
+        self.start_next_epoch_if_possible()
+
+    def start_next_epoch_if_possible(self):
+        if self.expecting_models == sum(list(map(lambda p: len(self.rounds[self.round][p]), self.rounds[self.round].keys()))) and self.done_training:
+            self.done_training = False
+            for i in range(0, self.settings.peers_per_host):
+                node_id = self.get_node_id(i)
+                self.nodes[node_id].aggregate(self.round)
+                accuracy, attack_rate = self.nodes[node_id].evaluate(self.test_data, self.attack_rate_data)
+                if accuracy >= 0 and attack_rate >= 0:
+                    self.statistic_logger(f"accuracy_{i}", accuracy)
+                    self.statistic_logger(f"attack_rate_{i}", attack_rate)
+
+            self.round += 1
+            self.start_next_epoch()
+
 
     def receive_model(self, host: Peer, info: bytes, model: bytes):
         info = json.loads(info.decode())
@@ -103,7 +125,7 @@ class NodeManager(Manager):
             self.logger.info("Received model from peer that is not supposed to send")
             return
 
-        if self.expecting_models <= 0:
+        if len(self.rounds[r]) > self.expecting_models:
             self.logger.info("Received model while not expecting any")
             return
 
@@ -121,21 +143,9 @@ class NodeManager(Manager):
             node_id = self.get_node_id(i)
             for j in self.nodes[node_id].get_ids():
                 if p in self.edges[j]:
-                    self.nodes[node_id].receive_model(model, p)
+                    self.nodes[node_id].receive_model(model, p, r)
 
-        self.expecting_models -= 1
-        if self.expecting_models == 0:
-            for i in range(0, self.settings.peers_per_host):
-                node_id = self.get_node_id(i)
-                self.nodes[node_id].aggregate()
-                accuracy, attack_rate = self.nodes[node_id].evaluate(self.test_data)
-                if accuracy >= 0 and attack_rate >= 0:
-                    self.statistic_logger(f"accuracy_{i}", accuracy)
-                    self.statistic_logger(f"attack_rate_{i}", attack_rate)
-
-            self.expecting_models = len(self.receiving_from)
-            self.round += 1
-            self.start_next_epoch()
+        self.start_next_epoch_if_possible()
 
     def get_node_id(self, index: int) -> int:
         return self.settings.peers_per_host * (self.peer_id - 1) + index

@@ -3,6 +3,7 @@ import traceback
 from asyncio import ensure_future, Future
 
 from ipv8.community import Community
+from ipv8.types import Peer
 
 from communication.util.eva.protocol import EVAProtocol
 from communication.util.eva.result import TransferResult
@@ -50,27 +51,27 @@ class DLCommunity(Community):
     async def start_lifecycle(self):
         self.manager.start_next_epoch()
 
-    def on_eva_send_done(self, future: Future, peer: int, serialized_response: bytes, binary_data: bytes, nonce: int):
+    def on_eva_send_done(self, future: Future, peer: Peer, peer_id: int, serialized_response: bytes, binary_data: bytes, nonce: int):
         if future.cancelled():  # Do not reschedule if the future was cancelled
             return
 
         if future.exception():
-            self.logger.warning(f"Transfer to {peer} failed, scheduling it again (Exception: %s)", future.exception())
+            self.logger.warning(f"Transfer to {peer_id} failed, scheduling it again (Exception: %s)", future.exception())
             # The transfer failed - try it again after some delay
             ensure_future(asyncio.sleep(1)).add_done_callback(
-                lambda _: self.send_model(peer, serialized_response, binary_data, nonce))
+                lambda _: self.send_model(peer, peer_id, serialized_response, binary_data, nonce))
 
-    def send_model(self, peer: int, info: bytes, model: bytes, nonce: int = None):
+    def send_model(self, peer: Peer, peer_id: int, info: bytes, model: bytes, nonce: int = None):
         try:
             if nonce is None:
                 nonce = self.eva.get_nonce()
 
-            if peer == self.experiment_module.my_id:
+            if peer_id == self.experiment_module.my_id:
                 self.register_task("send_to_self_" + str(nonce), self.on_receive_model,
                                    TransferResult(self.my_peer, info, model, nonce), delay=0)
             else:
-                future = ensure_future(self.eva.send_binary(self.experiment_module.get_peer(str(peer)), info, model, nonce))
-                future.add_done_callback(lambda f: self.on_eva_send_done(f, peer, info, model, nonce))
+                future = ensure_future(self.eva.send_binary(self.experiment_module.get_peer(str(peer_id)), info, model, nonce))
+                future.add_done_callback(lambda f: self.on_eva_send_done(f, peer, peer_id, info, model, nonce))
         except:
             tb = traceback.format_exc()
-            self.logger.error(f"Failed to send model to {peer} Exception:\n {tb}")
+            self.logger.error(f"Failed to send model to {peer_id} Exception:\n {tb}")

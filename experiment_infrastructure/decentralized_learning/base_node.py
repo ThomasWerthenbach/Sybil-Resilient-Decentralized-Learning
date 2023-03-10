@@ -16,7 +16,7 @@ class BaseNode(ABC):
         self.logger = logging.getLogger(self.__class__.__name__)
 
     @abstractmethod
-    def receive_model(self, model: nn.Module, peer: int) -> None:
+    def receive_model(self, model: nn.Module, peer: int, round: int) -> None:
         ...
 
     @abstractmethod
@@ -24,7 +24,7 @@ class BaseNode(ABC):
         ...
 
     @abstractmethod
-    def start_next_epoch(self) -> None:
+    def start_next_epoch(self, round: int) -> None:
         ...
 
     @abstractmethod
@@ -32,11 +32,11 @@ class BaseNode(ABC):
         ...
 
     @abstractmethod
-    def aggregate(self) -> None:
+    def aggregate(self, round: int) -> None:
         ...
 
     @abstractmethod
-    def evaluate(self, test_data: DataLoader) -> Tuple[float, float]:
+    def evaluate(self, test_data: DataLoader, attack_rate: DataLoader) -> Tuple[float, float]:
         ...
 
     def train(self, model: Model, dataset: DataLoader, settings: Settings):

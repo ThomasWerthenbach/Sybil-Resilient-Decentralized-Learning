@@ -1,0 +1,13 @@
+{
+  "non_iid": false,
+  "learning_rate": 0.01,
+  "momentum": 0.5,
+  "model": "MNIST",
+  "aggregator": "average",
+  "epochs": 3,
+  "total_hosts": 2,
+  "peers_per_host": 1,
+  "network_layout": "4",
+  "sybil_amount": 2,
+  "sybil_attack": "label_flip"
+}

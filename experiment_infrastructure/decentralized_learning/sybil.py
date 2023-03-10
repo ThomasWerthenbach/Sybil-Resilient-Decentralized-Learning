@@ -1,5 +1,7 @@
-from typing import List, Tuple
+from collections import defaultdict
+from typing import List, Tuple, Dict
 
+from torch import nn
 from torch.utils.data import DataLoader
 
 from experiment_infrastructure.decentralized_learning.base_node import BaseNode
@@ -20,18 +22,23 @@ class Sybil(BaseNode):
         self.data = data
         self.node_id = node_id
         self.settings = settings
-        self.models = list()
+        self.models: Dict[int, Dict[int, nn.Module]] = defaultdict(dict)
 
-    def start_next_epoch(self) -> None:
+    def start_next_epoch(self, round: int) -> None:
         self.train(self.model, self.data, self.settings)
+        for m, i in zip(self.get_models(), self.get_ids()):
+            self.receive_model(m, i, round)
 
-    def aggregate(self) -> None:
+    def aggregate(self, round: int) -> None:
         """
         Malicious nodes aggregate simply through averaging regardless of the experiment configuration.
         """
-        self.model = Average().aggregate(self.models + self.get_models(), [])
+        peers = list(self.models[round].keys())
+        models = list(map(lambda p: self.models[round][p], peers))
+        self.model = Average().aggregate(models, [])
+        del self.models[round]
 
-    def evaluate(self, test_data: DataLoader) -> Tuple[float, float]:
+    def evaluate(self, test_data: DataLoader, attack_rate: DataLoader) -> Tuple[float, float]:
         return -1, -1
 
     def get_ids(self) -> List[int]:
@@ -43,7 +50,5 @@ class Sybil(BaseNode):
     def get_models(self) -> List[Model]:
         return [self.model] * (self.settings.sybil_amount + 1)
 
-    def receive_model(self, serialized_model: Model, peer: int) -> None:
-        if peer < self.node_id:
-            # We don't store Sybil models
-            self.models.append(serialized_model)
+    def receive_model(self, serialized_model: Model, peer: int, round: int) -> None:
+        self.models[round][peer] = serialized_model

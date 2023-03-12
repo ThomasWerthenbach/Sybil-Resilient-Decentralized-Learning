@@ -24,7 +24,7 @@ def send_model(info: bytes, model: bytes):
 
 if __name__ == '__main__':
     filename = os.path.join(os.path.dirname(__file__),
-                            '..\\gumby\\experiments\\FL_IID_AVG_MNIST_SYBIL_LABEL_FLIP\\settings.json')
+                            'settings.json')
     with open(filename) as f:
         s = Settings.from_json("".join([x.strip() for x in f.readlines()]))
 

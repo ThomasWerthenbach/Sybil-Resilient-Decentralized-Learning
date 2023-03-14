@@ -38,8 +38,8 @@ class ServerManager(Manager):
         self.data = Model.get_model_class(settings.model)().get_dataset_class()().all_test_data(120)
         self.aggregator: Aggregator = Aggregator.get_aggregator_class(settings.aggregator)()
 
-        if settings.sybil_amount > 0:
-            attack = Attack.get_attack_class(settings.sybil_attack)()
+        if settings.sybil_attack:
+            attack = Attack.get_attack_class(settings.sybil_attack_type)()
             self.attack_rate_data = attack.transform_eval_data(self.data)
 
     def receive_model(self, host: Peer, info: bytes, serialized_model: bytes):
@@ -105,7 +105,7 @@ class ServerManager(Manager):
                 test_loss, test_corr, len(self.data) * 120, test_acc))
             self.statistic_logger("accuracy", test_acc)
 
-            if self.settings.sybil_amount > 0:
+            if self.settings.sybil_attack:
                 test_loss = 0
                 test_corr = 0
                 with torch.no_grad():

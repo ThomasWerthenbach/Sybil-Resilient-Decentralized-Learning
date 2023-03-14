@@ -34,8 +34,9 @@ class DLCommunity(Community):
                                    experiment_module.autoplot_add_point)
         self.experiment_module = experiment_module
         for i in range(settings.peers_per_host):
-            self.experiment_module.autoplot_create(f"accuracy_{i}")
-            self.experiment_module.autoplot_create(f"attack_rate_{i}")
+            if not settings.sybil_attack or host_id != settings.total_hosts or i != settings.peers_per_host - 1:
+                self.experiment_module.autoplot_create(f"accuracy_{i}")
+                self.experiment_module.autoplot_create(f"attack_rate_{i}")
         self.register_task("start_lifecycle_" + str(host_id), self.start_lifecycle, delay=0)
 
     def log(self, message: str):

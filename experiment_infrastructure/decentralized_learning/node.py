@@ -79,7 +79,7 @@ class Node(BaseNode):
                 torch.cuda.empty_cache()
 
             test_att = 0.0
-            if self.settings.sybil_amount > 0:
+            if self.settings.sybil_attack:
                 assert attack_rate_data is not None
                 test_loss = 0
                 test_corr = 0

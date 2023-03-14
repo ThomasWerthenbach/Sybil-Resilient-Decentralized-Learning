@@ -21,4 +21,5 @@ class Settings:
 
     # Sybil settings
     sybil_amount: int
-    sybil_attack: str
+    sybil_attack: bool
+    sybil_attack_type: str

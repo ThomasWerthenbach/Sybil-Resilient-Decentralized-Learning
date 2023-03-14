@@ -31,9 +31,11 @@ class NodeManager(Manager):
         self.statistic_logger = statistic_logger
         self.test_data = Model.get_model_class(settings.model)().get_dataset_class()().all_test_data(120)
         self.attack_data = None
-        if settings.sybil_amount > 0:
-            attack = Attack.get_attack_class(settings.sybil_attack)()
+        if settings.sybil_attack:
+            attack = Attack.get_attack_class(settings.sybil_attack_type)()
             self.attack_rate_data = attack.transform_eval_data(self.test_data)
+        else:
+            self.attack_rate_data = None
         self.rounds: Dict[int, Dict[Peer, List[int]]] = defaultdict(lambda: defaultdict(list))
 
         self.edges: Dict[int, List[int]] = defaultdict(list)
@@ -52,13 +54,13 @@ class NodeManager(Manager):
             model = Model.get_model_class(settings.model)()
             node_id = self.get_node_id(i)
 
-            if settings.sybil_amount > 0 and peer_id == settings.total_hosts and i == settings.peers_per_host - 1:
+            if settings.sybil_attack and peer_id == settings.total_hosts and i == settings.peers_per_host - 1:
                 # Sybil node
                 dataset = model.get_dataset_class()() \
                     .get_peer_dataset(node_id,
                                       settings.total_hosts * settings.peers_per_host,
                                       settings.non_iid,
-                                      sybil_data_transformer=Attack.get_attack_class(settings.sybil_attack)())
+                                      sybil_data_transformer=Attack.get_attack_class(settings.sybil_attack_type)())
                 self.nodes[node_id] = Sybil(model, dataset, settings, node_id)
 
                 for sybil_id in self.nodes[node_id].get_ids():

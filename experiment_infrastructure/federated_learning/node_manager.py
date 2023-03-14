@@ -25,14 +25,14 @@ class NodeManager(Manager):
         self.nodes: List[BaseNode] = list()
         for i in range(settings.peers_per_host):
             model = Model.get_model_class(settings.model)()
-            if settings.sybil_amount > 0 and peer_id == settings.total_hosts and i == settings.peers_per_host - 1:
+            if settings.sybil_attack and peer_id == settings.total_hosts and i == settings.peers_per_host - 1:
                 # Sybil node
                 data = model.get_dataset_class()() \
                     .get_peer_dataset(settings.peers_per_host * (peer_id - 2) + i,
                                       # peer_id - 2, as peer_id's are 1-based and the server has id 1
                                       settings.total_hosts * settings.peers_per_host,
                                       settings.non_iid,
-                                      sybil_data_transformer=Attack.get_attack_class(settings.sybil_attack)())
+                                      sybil_data_transformer=Attack.get_attack_class(settings.sybil_attack_type)())
                 self.nodes.append(Sybil(model, data, settings, i))
             else:
                 # Honest node

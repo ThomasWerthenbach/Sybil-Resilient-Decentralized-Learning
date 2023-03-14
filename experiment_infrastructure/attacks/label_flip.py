@@ -20,7 +20,7 @@ class LabelFlip(Attack):
         self.t = t
         self.seed = seed
 
-    def transform_data(self, data: Partition, trainset: Dict[object, List], sizes, peer_id) -> Partition:
+    def transform_data(self, data: Partition, trainset: Dict[object, List], sizes, peer_id) -> List:
         all_targeted_train_data = list(map(lambda x: (x, self.t), trainset[self.f]))
 
         transformed_data = list()
@@ -35,4 +35,4 @@ class LabelFlip(Attack):
         random.seed(self.seed)
         random.shuffle(all_data)
 
-        return DataPartitioner(all_data, sizes).use(peer_id)
+        return all_data

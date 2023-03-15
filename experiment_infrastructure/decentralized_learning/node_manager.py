@@ -4,6 +4,8 @@ from collections import defaultdict
 from typing import Callable, List, Dict, Set
 
 import pandas as pd
+import torch.nn.functional as F
+
 import torch.cuda
 from ipv8.types import Peer
 
@@ -141,13 +143,52 @@ class NodeManager(Manager):
         self.rounds[r][host].append(p)
 
         model = deserialize_model(model, self.settings)
+
         for i in range(0, self.settings.peers_per_host):
             node_id = self.get_node_id(i)
             for j in self.nodes[node_id].get_ids():
                 if p in self.edges[j]:
+                    self.logger.info(f"Received model from {p} for {node_id} (round {r})")
                     self.nodes[node_id].receive_model(model, p, r)
 
         self.start_next_epoch_if_possible()
 
     def get_node_id(self, index: int) -> int:
         return self.settings.peers_per_host * (self.peer_id - 1) + index
+
+    # # For debugging:
+    # def get_att(self, model) -> float:
+    #     with torch.no_grad():
+    #         device_name = "cuda" if torch.cuda.is_available() else "cpu"
+    #         device = torch.device(device_name)
+    #         test_loss = 0
+    #         test_corr = 0
+    #         model.eval()
+    #         model.to(device)
+    #         for data, target in self.attack_rate_data:
+    #             data, target = data.to(device), target.to(device)
+    #             output = model(data)
+    #             test_loss += F.nll_loss(output, target, reduction='sum').item()
+    #             pred = output.argmax(dim=1, keepdim=True)
+    #             test_corr += pred.eq(target.view_as(pred)).sum().item()
+    #         test_loss /= len(self.attack_rate_data)
+    #         test_att = 100. * test_corr / (len(self.attack_rate_data) * 120)
+    #         return test_att
+    #
+    # def get_acc(self, model) -> float:
+    #     with torch.no_grad():
+    #         model.eval()
+    #         test_loss = 0
+    #         test_corr = 0
+    #         device_name = "cuda" if torch.cuda.is_available() else "cpu"
+    #         device = torch.device(device_name)
+    #         model.to(device)
+    #         for data, target in self.test_data:
+    #             data, target = data.to(device), target.to(device)
+    #             output = model(data)
+    #             test_loss += F.nll_loss(output, target, reduction='sum').item()
+    #             pred = output.argmax(dim=1, keepdim=True)
+    #             test_corr += pred.eq(target.view_as(pred)).sum().item()
+    #         test_loss /= len(self.test_data)
+    #         test_acc = 100. * test_corr / (len(self.test_data) * 120)
+    #         return test_acc

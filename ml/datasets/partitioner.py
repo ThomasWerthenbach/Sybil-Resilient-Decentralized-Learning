@@ -1,3 +1,4 @@
+import logging
 from random import Random
 
 import numpy as np
@@ -175,6 +176,7 @@ class DirichletDataPartitioner(DataPartitioner):
             Degree of heterogeneity. Lower is more heterogeneous.
         Code below modified from https://github.com/gong-xuan/FedKD/blob/master/dataset/data_cifar.py#L30
         """
+        self.logger = logging.getLogger(self.__class__.__name__)
         self.validation_set = validation_set
         self.data = data
         self.num_classes = num_classes
@@ -183,6 +185,7 @@ class DirichletDataPartitioner(DataPartitioner):
         self.partitions = [None] * num_peers
         np.random.seed(seed)
         split_arr = np.random.dirichlet([alpha] * num_peers, num_classes)
+        self.logger.info(f"Split array: {split_arr}")
         for cls_idx in range(num_classes):
             idx = np.where(np.asarray(data.targets) == cls_idx)[0]
             totaln = idx.shape[0]

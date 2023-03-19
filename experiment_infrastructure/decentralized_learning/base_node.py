@@ -39,6 +39,10 @@ class BaseNode(ABC):
     def evaluate(self, test_data: DataLoader, attack_rate: DataLoader) -> Tuple[float, float]:
         ...
 
+    @abstractmethod
+    def get_random_neighbour_history(self) -> Tuple[int, int, int, nn.Module] | None:
+        ...
+
     def train(self, model: Model, dataset: DataLoader, settings: Settings):
         """
         Train the model for one epoch

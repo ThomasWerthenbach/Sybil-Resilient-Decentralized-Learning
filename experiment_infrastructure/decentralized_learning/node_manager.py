@@ -100,6 +100,8 @@ class NodeManager(Manager):
                         sent_to.add(host_id)
                         self.send_model(self.me, host_id, json.dumps({'round': self.round, 'peer': _id}).encode(),
                                         serialize_model(model))
+
+            # todo if settings deems it necessary, gossip some model
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
         self.done_training = True

@@ -1,6 +1,8 @@
+import random
 from collections import defaultdict
 from typing import Dict, List, Tuple
 
+import numpy as np
 import torch
 import torch.nn.functional as F
 from torch import nn
@@ -11,6 +13,13 @@ from experiment_infrastructure.experiment_settings.settings import Settings
 from ml.aggregators.aggregator import Aggregator
 from ml.models.model import Model
 from ml.util import model_difference, model_sum
+
+
+class HistoricalRecord:
+    def __init__(self, round: int, distance: int, accumulated_update_history: nn.Module):
+        self.round = round
+        self.distance = distance
+        self.accumulated_update_history = accumulated_update_history
 
 
 class Node(BaseNode):
@@ -24,14 +33,39 @@ class Node(BaseNode):
         self.models: Dict[int, Dict[int, nn.Module]] = defaultdict(dict)
         self.previous_models: Dict[int, nn.Module] = dict()
 
-        self.accumulated_update_history: Dict[int, nn.Module] = dict()
+        self.history: Dict[int, HistoricalRecord] = dict()
 
         self.aggregator = Aggregator.get_aggregator_class(settings.aggregator)()
+
+    def get_random_neighbour_history(self) -> Tuple[int, int, int, nn.Module] | None:
+        """
+        Return a random neighbour's history. Note that nearby neighbours are preferred over distant ones.
+        We utilize the exponential distribution y = lambda * e^(-lambda * x) to obtain the desired distribution.
+        :return: A tuple of the peer id, the round number, the distance to the peer, and the model history.
+        """
+        if len(self.history) == 0:
+            return None
+        else:
+            distance = np.random.exponential(scale=1.25) + 2  # todo rounding strategy?
+            filtered = list(filter(lambda k, v: v.distance == distance, self.history.items()))
+
+            neighbour_id, history = random.choice(filtered)
+            return neighbour_id, history.round, history.distance, history.accumulated_update_history
+
+    def receive_distant_model(self, model: nn.Module, peer: int, round: int, distance: int):
+        if peer in self.history:
+            if round > self.history[peer].round and self.history[peer].distance > 1:
+                self.history[peer] = HistoricalRecord(round, distance, model)
+            else:
+                # Interesting case. If one were to apply a defense mechanism against spoofing model updates,
+                # this would be the place to do so.
+                pass
+        else:
+            self.history[peer] = HistoricalRecord(round, distance, model)
 
     def receive_model(self, model: nn.Module, peer: int, round: int):
         # Store model properly
         self.models[round][peer] = model
-
         # Calculate difference with previous model
         if peer in self.previous_models:
             difference = model_difference(self.previous_models[peer], model)
@@ -39,10 +73,11 @@ class Node(BaseNode):
             difference = model
 
         # Store model updates properly
-        if peer in self.accumulated_update_history:
-            self.accumulated_update_history[peer] = model_sum(self.accumulated_update_history[peer], difference)
+        if peer in self.history:
+            self.history[peer] = HistoricalRecord(round, 1,
+                                                  model_sum(self.history[peer].accumulated_update_history, difference))
         else:
-            self.accumulated_update_history[peer] = difference
+            self.history[peer] = HistoricalRecord(round, 1, difference)
 
     def start_next_epoch(self, round: int) -> None:
         self.train(self.model, self.dataset, self.settings)
@@ -51,7 +86,10 @@ class Node(BaseNode):
     def aggregate(self, round: int) -> None:
         peers = list(self.models[round].keys())
         models = list(map(lambda p: self.models[round][p], peers))
-        history = list(map(lambda p: self.accumulated_update_history[p], peers))
+        history = list(map(lambda p: self.history[p], peers))
+        # We add the history of distant neighbours as well
+        history += list(map(lambda x: x[1], filter(lambda k, v: k not in peers, self.history.items())))
+        
         self.model = self.aggregator.aggregate(models, history)
         self.previous_models = self.models[round]
         del self.models[round]

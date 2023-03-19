@@ -16,6 +16,12 @@ class Sybil(BaseNode):
     Note that all created Sybils are also part of this node.
     """
 
+    def receive_distant_model(self, model: nn.Module, peer: int, round: int, distance: int) -> None:
+        pass
+
+    def get_random_neighbour_history(self) -> Tuple[int, int, int, nn.Module] | None:
+        raise Exception("Sybils do not send any history gossip")
+
     def __init__(self, model: Model, data: DataLoader, settings: Settings, node_id: int):
         super().__init__()
         self.model = model

@@ -10,6 +10,9 @@ from ml.aggregators.util import weighted_average
 
 
 class Repple(Aggregator):
+    def requires_gossip(self) -> bool:
+        return True
+
     def flatten_one_layer(self, l: List) -> List:
         flat_list = []
         for sublist in l:

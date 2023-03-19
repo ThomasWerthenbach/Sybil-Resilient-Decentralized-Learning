@@ -12,6 +12,9 @@ class Average(Aggregator):
     Basic aggregator which simply aggregates all models
     """
 
+    def requires_gossip(self) -> bool:
+        return False
+
     def aggregate(self, models: List[nn.Module], delta_history: List[nn.Module],
                   relevant_weights: List[int] = None) -> nn.Module:
         weights = [float(1. / len(models)) for _ in range(len(models))]

@@ -15,6 +15,9 @@ class FoolsGold(Aggregator):
     vol. abs/1808.04866, 2018. [Online]. Available: https://arxiv.org/abs/1808.04866
     """
 
+    def requires_gossip(self) -> bool:
+        return False
+
     def flatten_one_layer(self, l: List) -> List:
         flat_list = []
         for sublist in l:

@@ -20,6 +20,10 @@ class BaseNode(ABC):
         ...
 
     @abstractmethod
+    def receive_distant_model(self, model: nn.Module, peer: int, round: int, distance: int) -> None:
+        ...
+
+    @abstractmethod
     def get_models(self) -> List[Model]:
         ...
 

@@ -19,3 +19,7 @@ class Aggregator(ABC):
             from ml.aggregators.foolsgold import FoolsGold
             return FoolsGold
         raise NotImplementedError(f"No aggregator found for {name}")
+
+    @abstractmethod
+    def requires_gossip(self) -> bool:
+        ...

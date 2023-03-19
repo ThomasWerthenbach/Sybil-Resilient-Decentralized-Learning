@@ -16,10 +16,11 @@ from ml.util import model_difference, model_sum
 
 
 class HistoricalRecord:
-    def __init__(self, round: int, distance: int, accumulated_update_history: nn.Module):
+    def __init__(self, round: int, distance: int, received_from: int, accumulated_update_history: nn.Module):
         self.round = round
         self.distance = distance
         self.accumulated_update_history = accumulated_update_history
+        self.received_from = received_from
 
 
 class Node(BaseNode):
@@ -37,7 +38,7 @@ class Node(BaseNode):
 
         self.aggregator = Aggregator.get_aggregator_class(settings.aggregator)()
 
-    def get_random_neighbour_history(self) -> Tuple[int, int, int, nn.Module] | None:
+    def get_random_neighbour_history(self, for_peer: int) -> Tuple[int, int, int, nn.Module] | None:
         """
         Return a random neighbour's history. Note that nearby neighbours are preferred over distant ones.
         We utilize the exponential distribution y = lambda * e^(-lambda * x) to obtain the desired distribution.
@@ -46,22 +47,46 @@ class Node(BaseNode):
         if len(self.history) == 0:
             return None
         else:
-            distance = np.random.exponential(scale=1.25) + 2  # todo rounding strategy?
-            filtered = list(filter(lambda k, v: v.distance == distance, self.history.items()))
+            lamb = 1/1.25
+            distribution = dict()
+            for peer_id, history in self.history.items():
+                distribution[peer_id] = lamb * np.exp(-lamb * (history.distance - 1))
 
-            neighbour_id, history = random.choice(filtered)
+            # Remove history of self
+            if self.node_id in distribution:
+                distribution.pop(self.node_id)
+
+            # Remove history of for_peer itself
+            if for_peer in distribution:
+                distribution.pop(for_peer)
+
+            # Remove history that we received from for_peer (can be found in received_from)
+            for peer_id, history in self.history.items():
+                if history.received_from == for_peer:
+                    if peer_id in distribution:
+                        distribution.pop(peer_id)
+
+            if not distribution:
+                return None
+
+            distribution = {k: v / sum(distribution.values()) for k, v in distribution.items()}
+
+            neighbour_id = np.random.choice(list(distribution.keys()), p=list(distribution.values()))
+            history = self.history[neighbour_id]
+
             return neighbour_id, history.round, history.distance, history.accumulated_update_history
 
-    def receive_distant_model(self, model: nn.Module, peer: int, round: int, distance: int):
-        if peer in self.history:
-            if round > self.history[peer].round and self.history[peer].distance > 1:
-                self.history[peer] = HistoricalRecord(round, distance, model)
+    def receive_distant_model(self, model: nn.Module, peer: int, round: int, distance: int, distant_peer: int):
+        self.logger.info(f"{self.node_id} received distant model of {distant_peer} from {peer}")
+        if distant_peer in self.history:
+            if round > self.history[distant_peer].round and self.history[distant_peer].distance > 1:
+                self.history[distant_peer] = HistoricalRecord(round, distance, peer, model)
             else:
                 # Interesting case. If one were to apply a defense mechanism against spoofing model updates,
                 # this would be the place to do so.
                 pass
         else:
-            self.history[peer] = HistoricalRecord(round, distance, model)
+            self.history[distant_peer] = HistoricalRecord(round, distance, peer, model)
 
     def receive_model(self, model: nn.Module, peer: int, round: int):
         # Store model properly
@@ -74,10 +99,10 @@ class Node(BaseNode):
 
         # Store model updates properly
         if peer in self.history:
-            self.history[peer] = HistoricalRecord(round, 1,
+            self.history[peer] = HistoricalRecord(round, 1, -1,
                                                   model_sum(self.history[peer].accumulated_update_history, difference))
         else:
-            self.history[peer] = HistoricalRecord(round, 1, difference)
+            self.history[peer] = HistoricalRecord(round, 1, -1, difference)
 
     def start_next_epoch(self, round: int) -> None:
         self.train(self.model, self.dataset, self.settings)
@@ -88,7 +113,9 @@ class Node(BaseNode):
         models = list(map(lambda p: self.models[round][p], peers))
         history = list(map(lambda p: self.history[p], peers))
         # We add the history of distant neighbours as well
-        history += list(map(lambda x: x[1], filter(lambda k, v: k not in peers, self.history.items())))
+        history += list(map(lambda x: x[1], list(filter(lambda x: x[0] not in peers, self.history.items()))))
+
+        history = list(map(lambda h: h.accumulated_update_history, history))
         
         self.model = self.aggregator.aggregate(models, history)
         self.previous_models = self.models[round]

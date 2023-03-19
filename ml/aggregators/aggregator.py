@@ -18,6 +18,9 @@ class Aggregator(ABC):
         elif name == 'foolsgold':
             from ml.aggregators.foolsgold import FoolsGold
             return FoolsGold
+        elif name == 'repple':
+            from ml.aggregators.repple import Repple
+            return Repple
         raise NotImplementedError(f"No aggregator found for {name}")
 
     @abstractmethod

@@ -20,7 +20,7 @@ class BaseNode(ABC):
         ...
 
     @abstractmethod
-    def receive_distant_model(self, model: nn.Module, peer: int, round: int, distance: int) -> None:
+    def receive_distant_model(self, model: nn.Module, peer: int, round: int, distance: int, distant_peer: int) -> None:
         ...
 
     @abstractmethod
@@ -44,7 +44,7 @@ class BaseNode(ABC):
         ...
 
     @abstractmethod
-    def get_random_neighbour_history(self) -> Tuple[int, int, int, nn.Module] | None:
+    def get_random_neighbour_history(self, for_peer: int) -> Tuple[int, int, int, nn.Module] | None:
         ...
 
     def train(self, model: Model, dataset: DataLoader, settings: Settings):

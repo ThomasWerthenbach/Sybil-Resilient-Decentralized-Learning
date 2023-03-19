@@ -54,6 +54,7 @@ class FoolsGold(Aggregator):
                         cs[i][j] = cs[i][j] * max_cs[i] / max_cs[j]
 
             wv = 1 - (np.max(cs, axis=1))
+            wv = wv[:len(models)]
             wv[wv > 1] = 1
             wv[wv < 0] = 0
 

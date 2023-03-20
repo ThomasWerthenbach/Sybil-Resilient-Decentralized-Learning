@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Union
 
 from torch import nn
 from torch.utils.data import DataLoader
@@ -19,7 +19,7 @@ class Sybil(BaseNode):
     def receive_distant_model(self, model: nn.Module, peer: int, round: int, distance: int, for_peer: int) -> None:
         pass
 
-    def get_random_neighbour_history(self, for_peer: int) -> Tuple[int, int, int, nn.Module] | None:
+    def get_random_neighbour_history(self, for_peer: int) -> Union[Tuple[int, int, int, nn.Module], None]:
         return None
 
     def __init__(self, model: Model, data: DataLoader, settings: Settings, node_id: int):

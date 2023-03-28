@@ -12,7 +12,7 @@ class MockPeer:
 
 
 if __name__ == '__main__':
-    filename = os.path.join(os.path.dirname(__file__), 'settings2.json')
+    filename = os.path.join(os.path.dirname(__file__), 'settings.json')
     with open(filename) as f:
         s = Settings.from_json("".join([x.strip() for x in f.readlines()]))
 

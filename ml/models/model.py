@@ -17,7 +17,16 @@ class Model(nn.Module, ABC):
 
     @staticmethod
     def get_model_class(name: str) -> Type['Model']:
-        if name == 'MNIST':
+        if name == 'FastMNIST':
             from ml.models.FasterMNIST import MNIST
             return MNIST
+        elif name == 'MNIST':
+            from ml.models.MNIST import MNIST
+            return MNIST
+        elif name == 'CIFAR10':
+            from ml.models.CIFAR10CNN import ResNet32
+            return ResNet32
+        elif name == 'FashionMNIST':
+            from ml.models.FashionMNIST import FashionMNISTCNN
+            return FashionMNISTCNN
         raise NotImplementedError(f"No model found for {name}")

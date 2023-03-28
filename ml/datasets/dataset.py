@@ -17,7 +17,7 @@ class Dataset(ABC):
         """
 
     @abstractmethod
-    def get_peer_dataset(self, peer_id: int, total_peers: int, non_iid, sizes=None,
+    def get_peer_dataset(self, peer_id: int, total_peers: int, non_iid=False, sizes=None, batch_size=8, shuffle=False,
                          sybil_data_transformer: Attack = None) -> DataLoader:
         """
         Function to load the training set

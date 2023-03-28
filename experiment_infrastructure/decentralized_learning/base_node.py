@@ -64,7 +64,6 @@ class BaseNode(ABC):
             momentum=settings.momentum)
 
         model.train()
-        train_loss = 0
         self.logger.info(f"Training for {settings.epochs} epochs with dataset length: {len(dataset)}")
         for _ in range(settings.epochs):
             for i, data in enumerate(dataset):
@@ -73,6 +72,5 @@ class BaseNode(ABC):
                 optimizer.zero_grad()
                 outputs = model(inputs)
                 loss = F.nll_loss(outputs, labels)
-                train_loss += F.nll_loss(outputs, labels, reduction='sum').item()
                 loss.backward()
                 optimizer.step()

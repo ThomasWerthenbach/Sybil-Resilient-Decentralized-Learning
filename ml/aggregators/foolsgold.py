@@ -28,9 +28,12 @@ class FoolsGold(Aggregator):
                 flat_list.append(sublist)
         return flat_list
 
-    def aggregate(self, models: List[nn.Module], history: List[nn.Module],
+    def aggregate(self, own_model: nn.Module, own_history: nn.Module, models: List[nn.Module], history: List[nn.Module],
                   relevant_parameter_indices: List[int] = None):
         with torch.no_grad():
+            if own_model is not None:
+                models = models + [own_model]
+                history = history + [own_history]
             parameters = map(lambda x: list(x.parameters()), history)
             parameters = list(map(lambda x: list(map(lambda y: y.data.tolist(), x)), parameters))
 
@@ -54,7 +57,7 @@ class FoolsGold(Aggregator):
                         cs[i][j] = cs[i][j] * max_cs[i] / max_cs[j]
 
             wv = 1 - (np.max(cs, axis=1))
-            wv = wv[:len(models)]
+
             wv[wv > 1] = 1
             wv[wv < 0] = 0
 
@@ -67,7 +70,6 @@ class FoolsGold(Aggregator):
             wv[(np.isinf(wv) + wv > 1)] = 1
             wv[(wv < 0)] = 0
 
-            # todo krum
             # Ensure that sum of weights is 1
             wv = wv / np.sum(wv)
 

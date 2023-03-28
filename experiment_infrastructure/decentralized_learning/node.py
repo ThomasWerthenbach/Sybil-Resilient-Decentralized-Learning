@@ -109,15 +109,15 @@ class Node(BaseNode):
         self.receive_model(self.model, self.node_id, round)
 
     def aggregate(self, round: int) -> None:
-        peers = list(self.models[round].keys())
+        peers = list(filter(lambda p: p != self.node_id, list(self.models[round].keys())))
         models = list(map(lambda p: self.models[round][p], peers))
         history = list(map(lambda p: self.history[p], peers))
         # We add the history of distant neighbours as well
-        history += list(map(lambda x: x[1], list(filter(lambda x: x[0] not in peers, self.history.items()))))
+        history += list(map(lambda x: x[1], list(filter(lambda x: x[0] not in peers and x[0] != self.node_id, self.history.items()))))
 
         history = list(map(lambda h: h.accumulated_update_history, history))
         
-        self.model = self.aggregator.aggregate(models, history)
+        self.model = self.aggregator.aggregate(self.models[round][self.node_id], self.history[self.node_id].accumulated_update_history, models, history)
         self.previous_models = self.models[round]
         del self.models[round]
 

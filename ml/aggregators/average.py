@@ -15,7 +15,9 @@ class Average(Aggregator):
     def requires_gossip(self) -> bool:
         return False
 
-    def aggregate(self, models: List[nn.Module], delta_history: List[nn.Module],
+    def aggregate(self, own_model: nn.Module, own_history: nn.Module, models: List[nn.Module], history: List[nn.Module],
                   relevant_weights: List[int] = None) -> nn.Module:
+        if own_model is not None:
+            models = models + [own_model]
         weights = [float(1. / len(models)) for _ in range(len(models))]
         return weighted_average(models, weights)

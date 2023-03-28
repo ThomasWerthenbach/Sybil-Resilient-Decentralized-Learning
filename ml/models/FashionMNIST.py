@@ -1,67 +1,81 @@
+from typing import Type
+
 import torch
 from torch import nn
 import torch.nn.functional as F
 
+from ml.datasets.FashionMNIST import FashionMNISTDataset
+from ml.datasets.dataset import Dataset
 from ml.models.model import Model
 
 
 class FashionMNISTCNN(Model):
     """
     Class for a CNN Model for FashionMNIST
-    Inspired by: doi.org/10.1109/ITCE48509.2020.9047776
-    (And Martijn's framework)
+    Based on: doi.org/10.1109/ITCE48509.2020.9047776
     """
-    # todo WIP
+
+    def get_dataset_class(self) -> Type[Dataset]:
+        return FashionMNISTDataset
 
     def __init__(self):
         super().__init__()
 
-        # self.lenet = nn.Sequential()
-        # self.lenet.add_module("conv1", nn.Conv2d(in_channels=1, out_channels=6, kernel_size=5, stride=1, padding=2))
-        # self.lenet.add_module("tanh1", nn.Tanh())
-        # self.lenet.add_module("avg_pool1", nn.AvgPool2d(kernel_size=2, stride=2))
-        # self.lenet.add_module("conv2", nn.Conv2d(in_channels=6, out_channels=16, kernel_size=5, stride=1))
-        # self.lenet.add_module("avg_pool2", nn.AvgPool2d(kernel_size=2, stride=2))
-        # self.lenet.add_module("conv3", nn.Conv2d(in_channels=16, out_channels=120, kernel_size=5,stride=1))
-        # self.lenet.add_module("tanh2", nn.Tanh())
-        # self.lenet.add_module("flatten", nn.Flatten(start_dim=1))
-        # lenet.add_module("fc1", nn.Linear(in_features=120 , out_features=84))
-        # lenet.add_module("tanh3", nn.Tanh())
-        # lenet.add_module("fc2", nn.Linear(in_features=84, out_features=10))
-
-        # self.conv1 = nn.Conv2d(1, 6, kernel_size=(5, 5))
-        # self.avg1 = nn.AvgPool2d(kernel_size=2, stride=2)
-        # self.conv2 = nn.Conv2d(6, 16, kernel_size=(5, 5))
-        # self.avg2 = nn.AvgPool2d(kernel_size=2, stride=2)
-        # self.fc1 = nn.Linear(16 * 4 * 4, 120)
-        # self.fc2 = nn.Linear(120, 84)
-        # self.fc3 = nn.Linear(84, 10)
-
-        # self.conv1 = nn.Conv2d(1, 6, kernel_size=(5, 5))
-
-        # Martijn's:
-        # 1.6 million params
-        self.conv1 = nn.Conv2d(1, 32, 5, padding=2)
-        self.pool = nn.MaxPool2d(2, 2)
-        self.conv2 = nn.Conv2d(32, 64, 5, padding=2)
-        self.fc1 = nn.Linear(7 * 7 * 64, 512)
-        self.fc2 = nn.Linear(512, 10)
+        self.conv1 = nn.Conv2d(1, 6, kernel_size=(5, 5), stride=1, padding=2)  # C1
+        self.avg1 = nn.AvgPool2d(kernel_size=(2, 2), stride=2)  # S2
+        self.conv2 = nn.Conv2d(6, 16, kernel_size=(5, 5), stride=1, padding=0)  # C3
+        self.avg2 = nn.AvgPool2d(kernel_size=(2, 2), stride=2)  # S4
+        self.conv3 = nn.Conv2d(16, 120, kernel_size=(5, 5), stride=1, padding=0)  # C5
+        self.fc1 = nn.Linear(120, 84)  # F6
+        self.fc2 = nn.Linear(84, 10)  # Output layer
 
     def forward(self, x):
-        # x = self.conv1.forward(x)
-        # x = self.avg1.forward(x)
-        # x = self.conv2.forward(x)
-        # x = self.avg2.forward(x)
-        # x = torch.flatten(x, 1)
-        # x = self.fc1.forward(x)
-        # x = self.fc2.forward(x)
-        # x = self.fc3.forward(x)
-        # return x
-
-        # Martijn's:
-        x = self.pool(F.relu(self.conv1(x)))
-        x = self.pool(F.relu(self.conv2(x)))
+        x = F.relu(self.conv1.forward(x))
+        x = self.avg1.forward(x)
+        x = F.relu(self.conv2.forward(x))
+        x = self.avg2.forward(x)
+        x = F.relu(self.conv3.forward(x))
         x = torch.flatten(x, 1)
-        x = F.relu(self.fc1(x))
-        x = self.fc2(x)
+        x = F.relu(self.fc1.forward(x))
+        x = self.fc2.forward(x)
         return x
+
+
+# class FashionCNN(nn.Module):
+#     """
+#     no paper :(
+#     https://www.kaggle.com/code/pankajj/fashion-mnist-with-pytorch-93-accuracy/notebook
+#     """
+#
+#     def __init__(self):
+#         super(FashionCNN, self).__init__()
+#
+#         self.layer1 = nn.Sequential(
+#             nn.Conv2d(in_channels=1, out_channels=32, kernel_size=3, padding=1),
+#             nn.BatchNorm2d(32),
+#             nn.ReLU(),
+#             nn.MaxPool2d(kernel_size=2, stride=2)
+#         )
+#
+#         self.layer2 = nn.Sequential(
+#             nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3),
+#             nn.BatchNorm2d(64),
+#             nn.ReLU(),
+#             nn.MaxPool2d(2)
+#         )
+#
+#         self.fc1 = nn.Linear(in_features=64 * 6 * 6, out_features=600)
+#         self.drop = nn.Dropout2d(0.25)
+#         self.fc2 = nn.Linear(in_features=600, out_features=120)
+#         self.fc3 = nn.Linear(in_features=120, out_features=10)
+#
+#     def forward(self, x):
+#         out = self.layer1(x)
+#         out = self.layer2(out)
+#         out = out.view(out.size(0), -1)
+#         out = self.fc1(out)
+#         out = self.drop(out)
+#         out = self.fc2(out)
+#         out = self.fc3(out)
+#
+#         return out

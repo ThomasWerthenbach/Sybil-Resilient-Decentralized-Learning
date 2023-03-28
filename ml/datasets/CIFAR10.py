@@ -18,7 +18,7 @@ class CIFAR10Dataset(Dataset):
             root=self.DEFAULT_DATA_DIR + '/train', train=True, download=True, transform=ToTensor(),
         ), batch_size=batch_size, shuffle=shuffle)
 
-    def get_peer_dataset(self, peer_id: int, total_peers: int, non_iid=False, sizes=None, batch_size=32, shuffle=False,
+    def get_peer_dataset(self, peer_id: int, total_peers: int, non_iid=False, sizes=None, batch_size=20, shuffle=False,
                          sybil_data_transformer: Attack = None):
         self.logger.info(f"Initializing dataset of size {1.0 / total_peers} for peer {peer_id}. Non-IID: {non_iid}")
         if sizes is None:

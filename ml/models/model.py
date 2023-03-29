@@ -24,8 +24,8 @@ class Model(nn.Module, ABC):
             from ml.models.MNIST import MNIST
             return MNIST
         elif name == 'CIFAR10':
-            from ml.models.CIFAR10CNN import ResNet32
-            return ResNet32
+            from ml.models.CIFAR10LENET import LeNet
+            return LeNet
         elif name == 'FashionMNIST':
             from ml.models.FashionMNIST import FashionMNISTCNN
             return FashionMNISTCNN

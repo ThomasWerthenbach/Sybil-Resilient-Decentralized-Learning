@@ -1,6 +1,12 @@
+from typing import Type
+
 from torch import nn
 import torch.nn.init as init
 import torch.nn.functional as F
+
+from ml.datasets.CIFAR10 import CIFAR10Dataset
+from ml.datasets.dataset import Dataset
+from ml.models.model import Model
 
 """
 https://paperswithcode.com/paper/trainable-activations-for-image
@@ -214,9 +220,15 @@ class ResNet26(nn.Module):
         return model_str
 
 
-class ResNet32(nn.Module):
-    def __init__(self, params):
+class ResNet32(Model):
+    def get_dataset_class(self) -> Type[Dataset]:
+        return CIFAR10Dataset
+
+    def __init__(self, params=None):
         super().__init__()
+
+        if params is None:
+            params = {"in_channels": 3, "out_channels": 10, "activation": "Default"}
 
         in_channels = params['in_channels']
         out_channels = params['out_channels']

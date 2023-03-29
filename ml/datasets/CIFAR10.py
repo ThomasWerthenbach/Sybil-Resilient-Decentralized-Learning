@@ -9,21 +9,21 @@ from ml.datasets.dataset import Dataset
 from ml.datasets.partitioner import DataPartitioner, DirichletDataPartitioner
 
 
-class FashionMNISTDataset(Dataset):
+class CIFAR10Dataset(Dataset):
     def __init__(self):
         self.logger = logging.getLogger(self.__class__.__name__)
 
     def all_training_data(self, batch_size=32, shuffle=False) -> DataLoader:
-        return DataLoader(torchvision.datasets.FashionMNIST(
+        return DataLoader(torchvision.datasets.CIFAR10(
             root=self.DEFAULT_DATA_DIR + '/train', train=True, download=True, transform=ToTensor(),
         ), batch_size=batch_size, shuffle=shuffle)
 
-    def get_peer_dataset(self, peer_id: int, total_peers: int, non_iid=False, sizes=None, batch_size=8, shuffle=False,
+    def get_peer_dataset(self, peer_id: int, total_peers: int, non_iid=False, sizes=None, batch_size=20, shuffle=False,
                          sybil_data_transformer: Attack = None):
         self.logger.info(f"Initializing dataset of size {1.0 / total_peers} for peer {peer_id}. Non-IID: {non_iid}")
         if sizes is None:
             sizes = [1.0 / total_peers for _ in range(total_peers)]
-        data = torchvision.datasets.FashionMNIST(
+        data = torchvision.datasets.CIFAR10(
             root=self.DEFAULT_DATA_DIR + '/train', train=True, download=True, transform=ToTensor(),
         )
         if not non_iid:
@@ -41,6 +41,6 @@ class FashionMNISTDataset(Dataset):
         return DataLoader(train_set, batch_size=batch_size, shuffle=shuffle)
 
     def all_test_data(self, batch_size=32, shuffle=False):
-        return DataLoader(torchvision.datasets.FashionMNIST(
+        return DataLoader(torchvision.datasets.CIFAR10(
             root=self.DEFAULT_DATA_DIR + '/test', train=False, download=True, transform=ToTensor()
         ), batch_size=batch_size, shuffle=shuffle)

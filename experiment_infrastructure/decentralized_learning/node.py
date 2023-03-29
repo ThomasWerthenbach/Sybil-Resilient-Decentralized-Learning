@@ -1,6 +1,5 @@
-import random
 from collections import defaultdict
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 
 import numpy as np
 import torch
@@ -38,7 +37,7 @@ class Node(BaseNode):
 
         self.aggregator = Aggregator.get_aggregator_class(settings.aggregator)()
 
-    def get_random_neighbour_history(self, for_peer: int) -> Tuple[int, int, int, nn.Module] | None:
+    def get_random_neighbour_history(self, for_peer: int) -> Union[Tuple[int, int, int, nn.Module], None]:
         """
         Return a random neighbour's history. Note that nearby neighbours are preferred over distant ones.
         We utilize the exponential distribution y = lambda * e^(-lambda * x) to obtain the desired distribution.

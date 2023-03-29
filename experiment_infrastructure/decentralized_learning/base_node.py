@@ -1,6 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 import torch
 from torch import nn
@@ -44,7 +44,7 @@ class BaseNode(ABC):
         ...
 
     @abstractmethod
-    def get_random_neighbour_history(self, for_peer: int) -> Tuple[int, int, int, nn.Module] | None:
+    def get_random_neighbour_history(self, for_peer: int) -> Union[Tuple[int, int, int, nn.Module], None]:
         ...
 
     def train(self, model: Model, dataset: DataLoader, settings: Settings):
@@ -62,6 +62,7 @@ class BaseNode(ABC):
             model.parameters(),
             lr=settings.learning_rate,
             momentum=settings.momentum)
+        error = nn.CrossEntropyLoss()
 
         model.train()
         self.logger.info(f"Training for {settings.epochs} epochs with dataset length: {len(dataset)}")
@@ -71,6 +72,6 @@ class BaseNode(ABC):
                 inputs, labels = inputs.to(device), labels.to(device)
                 optimizer.zero_grad()
                 outputs = model(inputs)
-                loss = F.nll_loss(outputs, labels)
+                loss = error(outputs, labels)
                 loss.backward()
                 optimizer.step()

@@ -62,7 +62,10 @@ class BaseNode(ABC):
             model.parameters(),
             lr=settings.learning_rate,
             momentum=settings.momentum)
-        error = nn.CrossEntropyLoss()
+        if settings.model == 'MNIST' or settings.model == 'FashionMNIST':
+            error = nn.NLLLoss()
+        else:
+            error = nn.CrossEntropyLoss()
 
         model.train()
         self.logger.info(f"Training for {settings.epochs} epochs with dataset length: {len(dataset)}")

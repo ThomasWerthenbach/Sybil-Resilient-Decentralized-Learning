@@ -8,6 +8,7 @@ from torch.utils.data import DataLoader
 from torchvision.transforms import ToTensor
 
 from ml.models.CIFAR10CNN import ResNet32
+from ml.models.CIFAR10LENET import LeNet
 
 
 def get_acc(model):
@@ -37,7 +38,8 @@ if __name__ == '__main__':
         ), batch_size=120, shuffle=True)
 
     # model = GNLeNet(input_channel=3, output=10, model_input=(32, 32))
-    model = ResNet32({"in_channels": 3, "out_channels": 10, "activation": "Default"})
+    # model = ResNet32({"in_channels": 3, "out_channels": 10, "activation": "Default"})
+    model = LeNet()
 
     device_name = "cuda" if torch.cuda.is_available() else "cpu"
     print(device_name)
@@ -46,9 +48,7 @@ if __name__ == '__main__':
 
     optimizer = torch.optim.SGD(
         model.parameters(),
-        lr=0.04,
-        weight_decay=0.0001,
-        momentum=0.9)
+        lr=0.002)
     error = nn.CrossEntropyLoss()
 
     print(f"Training for {3} epochs with dataset length: {len(fashion)}")

@@ -27,6 +27,7 @@ class Model(nn.Module, ABC):
             from ml.models.CIFAR10LENET import LeNet
             return LeNet
         elif name == 'FashionMNIST':
-            from ml.models.FashionMNIST import FashionMNISTCNN
-            return FashionMNISTCNN
+            # FashionMNIST has the same dimensions as MNIST.
+            from ml.models.FashionMNIST import FashionMNIST
+            return FashionMNIST
         raise NotImplementedError(f"No model found for {name}")

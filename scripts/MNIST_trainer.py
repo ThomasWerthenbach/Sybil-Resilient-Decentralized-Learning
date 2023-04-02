@@ -7,9 +7,7 @@ from torch.utils.data import DataLoader
 from torchvision.transforms import ToTensor
 import torch.nn.functional as F
 
-from ml.datasets.FashionMNIST import FashionMNISTDataset
-from ml.models.FashionMNIST import FashionMNISTCNN, FashionCNN
-from ml.models.MNIST import MNIST
+from ml.models.FasterMNIST import MNIST
 
 
 # class Network(nn.Module):
@@ -86,7 +84,7 @@ if __name__ == '__main__':
 
     optimizer = torch.optim.SGD(
         model.parameters(),
-        lr=0.005)
+        lr=0.001)
     error = nn.CrossEntropyLoss()
 
     print(f"Training for {3} epochs with dataset length: {len(fashion)}")

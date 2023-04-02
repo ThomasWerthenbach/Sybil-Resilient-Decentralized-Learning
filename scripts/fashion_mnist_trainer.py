@@ -7,48 +7,8 @@ from torch.utils.data import DataLoader
 from torchvision.transforms import ToTensor
 import torch.nn.functional as F
 
-from ml.datasets.FashionMNIST import FashionMNISTDataset
-from ml.models.FashionMNIST import FashionMNISTCNN, FashionCNN
+from ml.models.FasterMNIST import MNIST
 
-
-# class Network(nn.Module):
-#   def __init__(self):
-#     super().__init__()
-#
-#     # define layers
-#     self.conv1 = nn.Conv2d(in_channels=1, out_channels=6, kernel_size=5)
-#     self.conv2 = nn.Conv2d(in_channels=6, out_channels=12, kernel_size=5)
-#
-#     self.fc1 = nn.Linear(in_features=12*4*4, out_features=120)
-#     self.fc2 = nn.Linear(in_features=120, out_features=60)
-#     self.out = nn.Linear(in_features=60, out_features=10)
-#
-#   # define forward function
-#   def forward(self, t):
-#     # conv 1
-#     t = self.conv1(t)
-#     t = F.relu(t)
-#     t = F.max_pool2d(t, kernel_size=2, stride=2)
-#
-#     # conv 2
-#     t = self.conv2(t)
-#     t = F.relu(t)
-#     t = F.max_pool2d(t, kernel_size=2, stride=2)
-#
-#     # fc1
-#     t = t.reshape(-1, 12*4*4)
-#     t = self.fc1(t)
-#     t = F.relu(t)
-#
-#     # fc2
-#     t = self.fc2(t)
-#     t = F.relu(t)
-#
-#     # output
-#     t = self.out(t)
-#     # don't need softmax here since we'll use cross-entropy as activation.
-#
-#     return t
 
 def get_acc(model):
     with torch.no_grad():
@@ -76,7 +36,7 @@ if __name__ == '__main__':
             root=os.path.join(os.path.dirname(__file__), '../data', 'test'), train=False, download=True, transform=ToTensor()
         ), batch_size=120, shuffle=True)
 
-    model = FashionMNISTCNN()
+    model = MNIST()
 
     device_name = "cuda" if torch.cuda.is_available() else "cpu"
     print(device_name)
@@ -86,7 +46,7 @@ if __name__ == '__main__':
     optimizer = torch.optim.SGD(
         model.parameters(),
         lr=0.001)
-    error = nn.CrossEntropyLoss()
+    error = nn.NLLLoss()
 
     print(f"Training for {3} epochs with dataset length: {len(fashion)}")
     for _ in range(50):
@@ -99,7 +59,7 @@ if __name__ == '__main__':
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            if i % 100 == 0:
+            if i % 1000 == 0:
                 print(f"{i}/{len(fashion)} Loss: {loss.item()}")
                 # break
         get_acc(model)

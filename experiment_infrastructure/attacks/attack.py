@@ -20,5 +20,8 @@ class Attack(ABC):
         if attack_name == 'label_flip':
             from experiment_infrastructure.attacks.label_flip import LabelFlip
             return LabelFlip
+        elif attack_name == 'backdoor':
+            from experiment_infrastructure.attacks.backdoor import Backdoor
+            return Backdoor
         else:
             raise NotImplementedError(f"Unknown attack name {attack_name}")

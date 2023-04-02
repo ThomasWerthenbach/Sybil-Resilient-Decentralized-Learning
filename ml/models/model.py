@@ -17,11 +17,8 @@ class Model(nn.Module, ABC):
 
     @staticmethod
     def get_model_class(name: str) -> Type['Model']:
-        if name == 'FastMNIST':
+        if name == 'MNIST':
             from ml.models.FasterMNIST import MNIST
-            return MNIST
-        elif name == 'MNIST':
-            from ml.models.MNIST import MNIST
             return MNIST
         elif name == 'CIFAR10':
             from ml.models.CIFAR10LENET import LeNet

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Type
+from typing import Type, List
 
 from torch.utils.data import DataLoader
 
@@ -7,8 +7,11 @@ from ml.datasets.partitioner import Partition
 
 
 class Attack(ABC):
+    def __init__(self, settings):
+        pass
+
     @abstractmethod
-    def transform_data(self, data: Partition, trainset, sizes, peer_id) -> Partition:
+    def transform_data(self, data: Partition, trainset, sizes, peer_id) -> List:
         ...
 
     @abstractmethod

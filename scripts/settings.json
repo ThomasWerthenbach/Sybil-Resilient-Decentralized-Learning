@@ -2,7 +2,7 @@
   "non_iid": true,
   "learning_rate": 0.01,
   "momentum": 0.5,
-  "model": "MNIST",
+  "model": "FashionMNIST",
   "aggregator": "repple",
   "epochs": 3,
   "total_hosts": 1,
@@ -10,5 +10,5 @@
   "network_layout": "4_sybil",
   "sybil_amount": 3,
   "sybil_attack": true,
-  "sybil_attack_type": "label_flip"
+  "sybil_attack_type": "backdoor"
 }

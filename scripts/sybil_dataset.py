@@ -25,4 +25,5 @@ if __name__ == "__main__":
         print(data[0][0])
         # print(data.shape)
         print(target)
+        print(len(d))
         break

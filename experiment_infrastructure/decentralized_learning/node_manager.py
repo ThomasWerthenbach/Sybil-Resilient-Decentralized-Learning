@@ -39,7 +39,7 @@ class NodeManager(Manager):
         self.test_data = Model.get_model_class(settings.model)().get_dataset_class()().all_test_data(120)
         self.attack_data = None
         if settings.sybil_attack:
-            attack = Attack.get_attack_class(settings.sybil_attack_type)()
+            attack = Attack.get_attack_class(settings.sybil_attack_type)(settings)
             self.attack_rate_data = attack.transform_eval_data(self.test_data)
         else:
             self.attack_rate_data = None
@@ -67,7 +67,7 @@ class NodeManager(Manager):
                     .get_peer_dataset(node_id,
                                       settings.total_hosts * settings.peers_per_host,
                                       settings.non_iid,
-                                      sybil_data_transformer=Attack.get_attack_class(settings.sybil_attack_type)())
+                                      sybil_data_transformer=Attack.get_attack_class(settings.sybil_attack_type)(settings))
                 self.nodes[node_id] = Sybil(model, dataset, settings, node_id)
 
                 for sybil_id in self.nodes[node_id].get_ids():

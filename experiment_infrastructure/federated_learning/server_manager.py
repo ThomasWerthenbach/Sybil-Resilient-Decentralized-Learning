@@ -39,7 +39,7 @@ class ServerManager(Manager):
         self.aggregator: Aggregator = Aggregator.get_aggregator_class(settings.aggregator)()
 
         if settings.sybil_attack:
-            attack = Attack.get_attack_class(settings.sybil_attack_type)()
+            attack = Attack.get_attack_class(settings.sybil_attack_type)(settings)
             self.attack_rate_data = attack.transform_eval_data(self.data)
 
     def receive_model(self, host: Peer, info: bytes, serialized_model: bytes):

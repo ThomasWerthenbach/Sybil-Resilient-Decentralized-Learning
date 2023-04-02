@@ -1,9 +1,11 @@
+from typing import List
+
 from torch import Tensor
 from torch.utils.data import DataLoader
 
 from experiment_infrastructure.attacks.attack import Attack
 from experiment_infrastructure.experiment_settings.settings import Settings
-from ml.datasets.partitioner import Partition, DataPartitioner
+from ml.datasets.partitioner import Partition
 
 
 class Backdoor(Attack):
@@ -16,10 +18,9 @@ class Backdoor(Attack):
         self.seed = seed
         self.settings = settings
 
-    def transform_data(self, data: Partition, trainset, sizes, peer_id) -> Partition:
+    def transform_data(self, data: Partition, trainset, sizes, peer_id) -> List:
         transformed_data = list()
-        for i in range(len(data)):
-            x, y = data[i]
+        for x, y in data:
             self.add_backdoor(x)
             transformed_data.append((x, self.target_class))
 
@@ -28,24 +29,29 @@ class Backdoor(Attack):
     def transform_eval_data(self, eval_data: DataLoader):
         transformed_data = list()
         for x, y in eval_data.dataset:
-            first_tensor = x
-            while first_tensor.shape:
-                first_tensor = first_tensor[0]
-            first_tensor.mul_(0)
-            first_tensor.add_(1)
-            transformed_data.append((x, self.target_class))
+            # To calculate the attack rate, we should only retrieve samples from another class than the target class
+            if y != self.target_class:
+                self.add_backdoor(x)
+                transformed_data.append((x, self.target_class))
 
         return DataLoader(transformed_data, batch_size=120, shuffle=False)
+
+    def change_value_to_1(self, tensor: Tensor):
+        tensor.mul_(0)
+        tensor.add_(1)
 
     def add_backdoor(self, tensor: Tensor):
         if self.settings.model == 'MNIST':
             tensor = tensor[0]
+        if self.settings.model == 'FashionMNIST':
+            tensor = tensor[0]
         # Add a square in the top left corner
-        tensor[0][0].mul_(0)
-        tensor[0][0].add_(1)
-        tensor[0][1].mul_(0)
-        tensor[0][1].add_(1)
-        tensor[1][0].mul_(0)
-        tensor[1][0].add_(1)
-        tensor[1][1].mul_(0)
-        tensor[1][1].add_(1)
+        self.change_value_to_1(tensor[0][0])
+        self.change_value_to_1(tensor[0][1])
+        self.change_value_to_1(tensor[0][2])
+        self.change_value_to_1(tensor[1][0])
+        self.change_value_to_1(tensor[1][1])
+        self.change_value_to_1(tensor[1][2])
+        self.change_value_to_1(tensor[2][0])
+        self.change_value_to_1(tensor[2][1])
+        self.change_value_to_1(tensor[2][2])

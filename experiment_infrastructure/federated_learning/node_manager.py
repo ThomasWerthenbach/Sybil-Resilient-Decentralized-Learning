@@ -32,7 +32,7 @@ class NodeManager(Manager):
                                       # peer_id - 2, as peer_id's are 1-based and the server has id 1
                                       settings.total_hosts * settings.peers_per_host,
                                       settings.non_iid,
-                                      sybil_data_transformer=Attack.get_attack_class(settings.sybil_attack_type)())
+                                      sybil_data_transformer=Attack.get_attack_class(settings.sybil_attack_type)(settings))
                 self.nodes.append(Sybil(model, data, settings, i))
             else:
                 # Honest node

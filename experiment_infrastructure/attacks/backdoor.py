@@ -1,7 +1,7 @@
 from torch.utils.data import DataLoader
 
 from experiment_infrastructure.attacks.attack import Attack
-from ml.datasets.partitioner import Partition, DataPartitioner
+from ml.datasets.partitioner import Partition
 
 
 class Backdoor(Attack):
@@ -24,7 +24,16 @@ class Backdoor(Attack):
             first_tensor.add_(1)
             transformed_data.append((x, self.target_class))
 
-        return DataPartitioner(transformed_data, sizes).use(peer_id)
+        return transformed_data
 
     def transform_eval_data(self, eval_data: DataLoader):
-        raise NotImplementedError()
+        transformed_data = list()
+        for x, y in eval_data.dataset:
+            first_tensor = x
+            while first_tensor.shape:
+                first_tensor = first_tensor[0]
+            first_tensor.mul_(0)
+            first_tensor.add_(1)
+            transformed_data.append((x, self.target_class))
+
+        return DataLoader(transformed_data, batch_size=120, shuffle=False)

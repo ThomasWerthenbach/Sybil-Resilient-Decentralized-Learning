@@ -59,8 +59,10 @@ class FEMNIST(MNIST):
         if self._check_exists():
             return
 
-        utils.makedir_exist_ok(self.raw_folder)
-        utils.makedir_exist_ok(self.processed_folder)
+        if not os.path.exists(self.raw_folder):
+            os.makedirs(self.raw_folder)
+        if not os.path.exists(self.processed_folder):
+            os.makedirs(self.processed_folder)
 
         # download files
         for url, md5 in self.resources:

@@ -20,4 +20,14 @@ class Model(nn.Module, ABC):
         if name == 'MNIST':
             from ml.models.FasterMNIST import MNIST
             return MNIST
+        elif name == 'CIFAR10':
+            from ml.models.CIFAR10LENET import LeNet
+            return LeNet
+        elif name == 'FashionMNIST':
+            # FashionMNIST has the same dimensions as MNIST.
+            from ml.models.FashionMNIST import FashionMNIST
+            return FashionMNIST
+        elif name == 'CelebA':
+            from ml.models.Celeba import CNN
+            return CNN
         raise NotImplementedError(f"No model found for {name}")

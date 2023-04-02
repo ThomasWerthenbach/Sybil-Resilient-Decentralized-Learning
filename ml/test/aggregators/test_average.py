@@ -7,11 +7,6 @@ from ml.aggregators.average import Average
 
 
 class TestAverage(TestCase):
-    class DummyModel(nn.Module):
-        def __init__(self, param):
-            super().__init__()
-            self.param = param
-
     def test_aggregate(self):
         a = nn.Linear(2, 2)
         b = nn.Linear(2, 2)

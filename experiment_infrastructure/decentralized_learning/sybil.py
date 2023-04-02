@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Union
 
 from torch import nn
 from torch.utils.data import DataLoader
@@ -15,6 +15,12 @@ class Sybil(BaseNode):
     Represents a malicious node launching a Sybil attack in the decentralized learning setting.
     Note that all created Sybils are also part of this node.
     """
+
+    def receive_distant_model(self, model: nn.Module, peer: int, round: int, distance: int, for_peer: int) -> None:
+        pass
+
+    def get_random_neighbour_history(self, for_peer: int) -> Union[Tuple[int, int, int, nn.Module], None]:
+        return None
 
     def __init__(self, model: Model, data: DataLoader, settings: Settings, node_id: int):
         super().__init__()
@@ -35,7 +41,7 @@ class Sybil(BaseNode):
         """
         peers = list(self.models[round].keys())
         models = list(map(lambda p: self.models[round][p], peers))
-        self.model = Average().aggregate(models, [])
+        self.model = Average().aggregate(None, None, models, [])
         del self.models[round]
 
     def evaluate(self, test_data: DataLoader, attack_rate: DataLoader) -> Tuple[float, float]:

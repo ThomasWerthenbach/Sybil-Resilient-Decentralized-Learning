@@ -9,14 +9,9 @@ from ml.aggregators.aggregator import Aggregator
 from ml.aggregators.util import weighted_average
 
 
-class FoolsGold(Aggregator):
-    """
-    C. Fung, C. J. M. Yoon, and I. Beschastnikh, “Mitigating sybils in federated learning poisoning,” CoRR,
-    vol. abs/1808.04866, 2018. [Online]. Available: https://arxiv.org/abs/1808.04866
-    """
-
+class Repple(Aggregator):
     def requires_gossip(self) -> bool:
-        return False
+        return True
 
     def flatten_one_layer(self, l: List) -> List:
         flat_list = []
@@ -30,10 +25,8 @@ class FoolsGold(Aggregator):
 
     def aggregate(self, own_model: nn.Module, own_history: nn.Module, models: List[nn.Module], history: List[nn.Module],
                   relevant_parameter_indices: List[int] = None):
+
         with torch.no_grad():
-            if own_model is not None:
-                models = models + [own_model]
-                history = history + [own_history]
             parameters = map(lambda x: list(x.parameters()), history)
             parameters = list(map(lambda x: list(map(lambda y: y.data.tolist(), x)), parameters))
 
@@ -41,12 +34,7 @@ class FoolsGold(Aggregator):
                 while len(parameters[i]) > 0 and any(map(lambda x: type(x) == list, parameters[i])):
                     parameters[i] = self.flatten_one_layer(parameters[i])
 
-            if relevant_parameter_indices:
-                relevant_parameters = list(map(lambda x: x[relevant_parameter_indices], parameters))
-            else:
-                relevant_parameters = parameters
-
-            cs = smp.cosine_similarity(relevant_parameters) - np.eye(len(history))
+            cs = smp.cosine_similarity(parameters) - np.eye(len(history))
 
             max_cs = np.max(cs, axis=1) + 1e-5
             for i in range(len(history)):
@@ -57,7 +45,7 @@ class FoolsGold(Aggregator):
                         cs[i][j] = cs[i][j] * max_cs[i] / max_cs[j]
 
             wv = 1 - (np.max(cs, axis=1))
-
+            wv = wv[:len(models)]
             wv[wv > 1] = 1
             wv[wv < 0] = 0
 
@@ -69,6 +57,11 @@ class FoolsGold(Aggregator):
             wv = (np.log((wv / (1 - wv)) + 1e-5) + 0.5)
             wv[(np.isinf(wv) + wv > 1)] = 1
             wv[(wv < 0)] = 0
+
+            # Add our own model, which we trust
+            if own_model is not None:
+                np.append(wv, 1)
+                models = models + [own_model]
 
             # Ensure that sum of weights is 1
             wv = wv / np.sum(wv)

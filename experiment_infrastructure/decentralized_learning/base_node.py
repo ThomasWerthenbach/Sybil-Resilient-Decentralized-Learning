@@ -1,6 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 import torch
 from torch import nn
@@ -17,6 +17,10 @@ class BaseNode(ABC):
 
     @abstractmethod
     def receive_model(self, model: nn.Module, peer: int, round: int) -> None:
+        ...
+
+    @abstractmethod
+    def receive_distant_model(self, model: nn.Module, peer: int, round: int, distance: int, distant_peer: int) -> None:
         ...
 
     @abstractmethod
@@ -39,6 +43,10 @@ class BaseNode(ABC):
     def evaluate(self, test_data: DataLoader, attack_rate: DataLoader) -> Tuple[float, float]:
         ...
 
+    @abstractmethod
+    def get_random_neighbour_history(self, for_peer: int) -> Union[Tuple[int, int, int, nn.Module], None]:
+        ...
+
     def train(self, model: Model, dataset: DataLoader, settings: Settings):
         """
         Train the model for one epoch
@@ -54,9 +62,12 @@ class BaseNode(ABC):
             model.parameters(),
             lr=settings.learning_rate,
             momentum=settings.momentum)
+        if settings.model == 'MNIST' or settings.model == 'FashionMNIST':
+            error = nn.NLLLoss()
+        else:
+            error = nn.CrossEntropyLoss()
 
         model.train()
-        train_loss = 0
         self.logger.info(f"Training for {settings.epochs} epochs with dataset length: {len(dataset)}")
         for _ in range(settings.epochs):
             for i, data in enumerate(dataset):
@@ -64,7 +75,6 @@ class BaseNode(ABC):
                 inputs, labels = inputs.to(device), labels.to(device)
                 optimizer.zero_grad()
                 outputs = model(inputs)
-                loss = F.nll_loss(outputs, labels)
-                train_loss += F.nll_loss(outputs, labels, reduction='sum').item()
+                loss = error(outputs, labels)
                 loss.backward()
                 optimizer.step()

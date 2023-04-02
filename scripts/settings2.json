@@ -6,9 +6,9 @@
   "aggregator": "repple",
   "epochs": 3,
   "total_hosts": 1,
-  "peers_per_host": 5,
-  "network_layout": "4_sybil",
-  "sybil_amount": 3,
+  "peers_per_host": 4,
+  "network_layout": "test_3_1-on-1",
+  "sybil_amount": 2,
   "sybil_attack": true,
   "sybil_attack_type": "label_flip"
 }

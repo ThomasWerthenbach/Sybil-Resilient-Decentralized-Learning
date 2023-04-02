@@ -1,5 +1,6 @@
 import json
 import os
+import random
 from collections import defaultdict
 from typing import Callable, List, Dict, Set
 
@@ -15,13 +16,17 @@ from experiment_infrastructure.decentralized_learning.manager import Manager
 from experiment_infrastructure.decentralized_learning.node import Node
 from experiment_infrastructure.decentralized_learning.sybil import Sybil
 from experiment_infrastructure.experiment_settings.settings import Settings
+from ml.aggregators.aggregator import Aggregator
 from ml.models.model import Model
 from ml.util import serialize_model, deserialize_model
 
 
 class NodeManager(Manager):
+    TRAIN_MSG = 1
+    GOSSIP_MSG = 2
 
-    def __init__(self, settings: Settings, peer_id: int, me: Peer, send_model: Callable[[Peer, int, bytes, bytes], None],
+    def __init__(self, settings: Settings, peer_id: int, me: Peer,
+                 send_model: Callable[[Peer, int, bytes, bytes], None],
                  statistic_logger: Callable[[str, float], None]):
         super().__init__()
         self.peer_id = peer_id
@@ -86,7 +91,8 @@ class NodeManager(Manager):
 
     def start_next_epoch(self) -> None:
         for i in range(self.settings.peers_per_host):
-            node = self.nodes[self.get_node_id(i)]
+            node_id = self.get_node_id(i)
+            node = self.nodes[node_id]
             node.start_next_epoch(self.round)
 
             for model, _id in zip(node.get_models(), node.get_ids()):
@@ -98,15 +104,32 @@ class NodeManager(Manager):
                     # Sybils will live on the host with the highest ID
                     if host_id not in sent_to:
                         sent_to.add(host_id)
-                        self.send_model(self.me, host_id, json.dumps({'round': self.round, 'peer': _id}).encode(),
+                        self.send_model(self.me, host_id,
+                                        json.dumps({'round': self.round, 'peer': _id, 'type': self.TRAIN_MSG}).encode(),
                                         serialize_model(model))
+
+            if Aggregator.get_aggregator_class(self.settings.aggregator)().requires_gossip():
+                neighbours = self.edges[node_id]
+                for neighbour_id in neighbours:
+                    history = node.get_random_neighbour_history(neighbour_id)
+                    # Use round-robbin, not random
+                    if history:
+                        p, r, d, h = history
+                        host_id = min((neighbour_id // self.settings.peers_per_host) + 1, self.settings.total_hosts)
+                        self.send_model(self.me, host_id, json.dumps(
+                            {'round': int(r), 'distant_peer': int(p), 'distance': int(d), 'type': self.GOSSIP_MSG,
+                             'peer': int(node_id),
+                             'destination': int(neighbour_id)}).encode(),
+                                        serialize_model(h))
+
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
         self.done_training = True
         self.start_next_epoch_if_possible()
 
     def start_next_epoch_if_possible(self):
-        if self.expecting_models == sum(list(map(lambda p: len(self.rounds[self.round][p]), self.rounds[self.round].keys()))) and self.done_training:
+        if self.expecting_models == sum(list(map(lambda p: len(self.rounds[self.round][p]),
+                                                 self.rounds[self.round].keys()))) and self.done_training:
             self.done_training = False
             for i in range(0, self.settings.peers_per_host):
                 node_id = self.get_node_id(i)
@@ -119,39 +142,51 @@ class NodeManager(Manager):
             self.round += 1
             self.start_next_epoch()
 
-
     def receive_model(self, host: Peer, info: bytes, model: bytes):
         info = json.loads(info.decode())
         r = info['round']
         p = info['peer']
+        t = info['type']
 
         if p not in self.receiving_from:
-            self.logger.info("Received model from peer that is not supposed to send")
+            self.logger.info("Received msg from peer that is not supposed to send")
             return
 
-        if len(self.rounds[r]) > self.expecting_models:
-            self.logger.info("Received model while not expecting any")
-            return
+        if t == self.TRAIN_MSG:
+            if len(self.rounds[r]) > self.expecting_models:
+                self.logger.info(f"Received train update from {p} while not expecting any")
+                return
 
-        if self.round > r:
-            self.logger.info("Received model from previous round")
-            return
+            if self.round > r:
+                self.logger.info(f"Received train update from previous round from {p}")
+                return
 
-        if p in self.rounds[r][host]:
-            self.logger.info("Received model from peer twice in same round")
-            return
-        self.rounds[r][host].append(p)
+            if p in self.rounds[r][host]:
+                self.logger.info(f"Received train update from peer twice in same round from {p}")
+                return
+            self.rounds[r][host].append(p)
 
-        model = deserialize_model(model, self.settings)
+            model = deserialize_model(model, self.settings)
 
-        for i in range(0, self.settings.peers_per_host):
-            node_id = self.get_node_id(i)
-            for j in self.nodes[node_id].get_ids():
-                if p in self.edges[j]:
-                    self.logger.info(f"Received model from {p} for {node_id} (round {r})")
-                    self.nodes[node_id].receive_model(model, p, r)
+            for i in range(0, self.settings.peers_per_host):
+                node_id = self.get_node_id(i)
+                for j in self.nodes[node_id].get_ids():
+                    if p in self.edges[j]:
+                        self.logger.info(f"Received model from {p} for {node_id} (round {r})")
+                        self.nodes[node_id].receive_model(model, p, r)
 
-        self.start_next_epoch_if_possible()
+            self.start_next_epoch_if_possible()
+        elif t == self.GOSSIP_MSG:
+            destination = info['destination']
+            distance = info['distance'] + 1  # We are one hop further away from the original sender
+            distant_peer = info['distant_peer']
+            for i in range(0, self.settings.peers_per_host):
+                node_id = self.get_node_id(i)
+                for j in self.nodes[node_id].get_ids():
+                    if j == destination:
+                        self.logger.info(f"Received history gossip from {p} for {destination} (from round {r})")
+                        self.nodes[node_id].receive_distant_model(deserialize_model(model, self.settings), p, r, distance, distant_peer)
+                        break
 
     def get_node_id(self, index: int) -> int:
         return self.settings.peers_per_host * (self.peer_id - 1) + index

@@ -25,16 +25,6 @@ class Repple(Aggregator):
 
     def aggregate(self, own_model: nn.Module, own_history: nn.Module, models: List[nn.Module], history: List[nn.Module],
                   relevant_parameter_indices: List[int] = None):
-        """
-        We should only do cosine similarity on the parameters from other nodes, because we know that we are good, and
-        we should not punish users who look like us.
-
-        1. Perform cosine similarity on the parameters from other nodes
-        2. Find the maximum cosine similarity for each node
-        3.
-        4. Compute the cosine similarity between our model history and the other nodes
-        5. Compute the weight vector
-        """
 
         with torch.no_grad():
             parameters = map(lambda x: list(x.parameters()), history)

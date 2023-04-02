@@ -41,7 +41,7 @@ class Sybil(BaseNode):
         """
         peers = list(self.models[round].keys())
         models = list(map(lambda p: self.models[round][p], peers))
-        self.model = Average().aggregate(models, [])
+        self.model = Average().aggregate(None, None, models, [])
         del self.models[round]
 
     def evaluate(self, test_data: DataLoader, attack_rate: DataLoader) -> Tuple[float, float]:

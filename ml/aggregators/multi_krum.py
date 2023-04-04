@@ -11,7 +11,7 @@ class MultiKrum(Krum):
     """
     https://proceedings.neurips.cc/paper_files/paper/2017/file/f4b9ec30ad9f68f89b29639786cb62ef-Paper.pdf
     """
-    def __init__(self, f: int = 1, m: int = 1):
+    def __init__(self, f: int = 1, m: int = 3):
         super().__init__(f)
         self.m = m
 

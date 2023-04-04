@@ -24,8 +24,12 @@ class Median(Aggregator):
 
         # Get coordinate-wise median from all models
         parameters = list(map(lambda x: list(x.parameters()), models))
+        device = torch.device("cpu")
+        for m in models:
+            m.to(device)
         with torch.no_grad():
             avg_delta = copy.deepcopy(models[0])
+            avg_delta.to(device)
             for p in avg_delta.parameters():
                 p.mul_(0)
             for i in range(len(parameters[0])):

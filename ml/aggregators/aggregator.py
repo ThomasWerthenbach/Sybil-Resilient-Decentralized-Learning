@@ -21,6 +21,15 @@ class Aggregator(ABC):
         elif name == 'repple':
             from ml.aggregators.repple import Repple
             return Repple
+        elif name == 'median':
+            from ml.aggregators.median import Median
+            return Median
+        elif name == 'krum':
+            from ml.aggregators.krum import Krum
+            return Krum
+        elif name == 'multi-krum':
+            from ml.aggregators.multi_krum import MultiKrum
+            return MultiKrum
         raise NotImplementedError(f"No aggregator found for {name}")
 
     @abstractmethod

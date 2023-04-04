@@ -18,15 +18,7 @@ class FoolsGold(Aggregator):
     def requires_gossip(self) -> bool:
         return False
 
-    def flatten_one_layer(self, l: List) -> List:
-        flat_list = []
-        for sublist in l:
-            if type(sublist) == list:
-                for item in sublist:
-                    flat_list.append(item)
-            else:
-                flat_list.append(sublist)
-        return flat_list
+
 
     def aggregate(self, own_model: nn.Module, own_history: nn.Module, models: List[nn.Module], history: List[nn.Module],
                   relevant_parameter_indices: List[int] = None):
@@ -37,9 +29,7 @@ class FoolsGold(Aggregator):
             parameters = map(lambda x: list(x.parameters()), history)
             parameters = list(map(lambda x: list(map(lambda y: y.data.tolist(), x)), parameters))
 
-            for i in range(len(parameters)):
-                while len(parameters[i]) > 0 and any(map(lambda x: type(x) == list, parameters[i])):
-                    parameters[i] = self.flatten_one_layer(parameters[i])
+            self.flatten_all(parameters)
 
             if relevant_parameter_indices:
                 relevant_parameters = list(map(lambda x: x[relevant_parameter_indices], parameters))

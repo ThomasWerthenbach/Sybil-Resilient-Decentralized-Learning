@@ -26,3 +26,18 @@ class Aggregator(ABC):
     @abstractmethod
     def requires_gossip(self) -> bool:
         ...
+
+    def flatten_one_layer(self, l: List) -> List:
+        flat_list = []
+        for sublist in l:
+            if type(sublist) == list:
+                for item in sublist:
+                    flat_list.append(item)
+            else:
+                flat_list.append(sublist)
+        return flat_list
+
+    def flatten_all(self, parameters):
+        for i in range(len(parameters)):
+            while len(parameters[i]) > 0 and any(map(lambda x: type(x) == list, parameters[i])):
+                parameters[i] = self.flatten_one_layer(parameters[i])

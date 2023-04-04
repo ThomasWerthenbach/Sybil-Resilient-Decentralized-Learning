@@ -22,7 +22,7 @@ class TestRepple(TestCase):
                 p.mul_(0)
                 p.add_(Tensor([1, -1]))
 
-        res = Repple().aggregate([a, b, c], [a, b, c])
+        res = Repple().aggregate(None, None, [a, b, c], [a, b, c])
 
         expected = [
             Tensor([[0, 1], [0, 1]]),
@@ -48,7 +48,7 @@ class TestRepple(TestCase):
                 p.mul_(0)
                 p.add_(Tensor([0, -1]))
 
-        res = Repple().aggregate([a, b, c], [a, b, c])
+        res = Repple().aggregate(None, None, [a, b, c], [a, b, c])
 
         expected = [
             Tensor([[1/3, 0], [1/3, 0]]),
@@ -75,7 +75,7 @@ class TestRepple(TestCase):
                 p.mul_(0)
                 p.add_(Tensor([1, -1]))
 
-        res = Repple().aggregate([a, b], [a, b, c])
+        res = Repple().aggregate(None, None, [a, b], [a, b, c])
 
         expected = [
             Tensor([[0, 1], [0, 1]]),

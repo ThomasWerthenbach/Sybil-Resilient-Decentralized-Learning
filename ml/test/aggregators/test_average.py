@@ -23,7 +23,7 @@ class TestAverage(TestCase):
                 p.add_(Tensor([i + 4, i + 5]))
 
         agg = Average()
-        res = agg.aggregate([a, b, c], [])
+        res = agg.aggregate(None, None, [a, b, c], [])
 
         expected = [
             Tensor([[2, 3], [2, 3]]),

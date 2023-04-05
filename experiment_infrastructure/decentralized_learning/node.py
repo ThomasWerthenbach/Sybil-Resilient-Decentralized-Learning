@@ -129,6 +129,7 @@ class Node(BaseNode):
             device = torch.device(device_name)
             self.model.to(device)
             for data, target in test_data:
+                target = target.type(torch.LongTensor)
                 data, target = data.to(device), target.to(device)
                 output = self.model(data)
                 test_loss += F.nll_loss(output, target, reduction='sum').item()

@@ -94,6 +94,7 @@ class ServerManager(Manager):
             result.to(device)
             with torch.no_grad():
                 for data, target in self.data:
+                    target = target.type(torch.LongTensor)
                     data, target = data.to(device), target.to(device)
                     output = result(data)
                     test_loss += F.nll_loss(output, target, reduction='sum').item()
@@ -110,6 +111,7 @@ class ServerManager(Manager):
                 test_corr = 0
                 with torch.no_grad():
                     for data, target in self.attack_rate_data:
+                        target = target.type(torch.LongTensor)
                         data, target = data.to(device), target.to(device)
                         output = result(data)
                         test_loss += F.nll_loss(output, target, reduction='sum').item()

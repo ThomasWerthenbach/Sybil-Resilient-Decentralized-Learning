@@ -72,6 +72,7 @@ class BaseNode(ABC):
         for _ in range(settings.epochs):
             for i, data in enumerate(dataset):
                 inputs, labels = data
+                labels = labels.type(torch.LongTensor)
                 inputs, labels = inputs.to(device), labels.to(device)
                 optimizer.zero_grad()
                 outputs = model(inputs)

@@ -9,7 +9,7 @@ import torch.nn.functional as F
 
 from ml.datasets.CelebA import Celeba
 from ml.datasets.FEMNIST import FEMNIST
-from ml.models.Celeba import CNN
+from ml.models.Celeba import CelebA
 from ml.models.MNIST import MNIST
 
 def get_acc(model):
@@ -32,7 +32,7 @@ if __name__ == '__main__':
     train = Celeba().all_training_data()
     test = Celeba().all_test_data()
 
-    model = CNN()
+    model = CelebA()
 
     device_name = "cuda" if torch.cuda.is_available() else "cpu"
     print(device_name)

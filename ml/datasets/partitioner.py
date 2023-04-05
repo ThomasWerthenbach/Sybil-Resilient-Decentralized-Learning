@@ -1,5 +1,6 @@
 import logging
 from random import Random
+from typing import Dict, List
 
 import numpy as np
 
@@ -158,7 +159,7 @@ class DirichletDataPartitioner(DataPartitioner):
     Class to partition the dataset using Dirichlet Function
     """
 
-    def __init__(self, data, sizes=[1.0], seed=42, alpha=0.1, validation_set=False, num_classes=10):
+    def __init__(self, data, sizes=[1.0], seed=42, alpha=0.1, num_classes=10, class_idx = None):
         """
         Constructor. Partitions the data according the parameters
         Parameters
@@ -176,7 +177,6 @@ class DirichletDataPartitioner(DataPartitioner):
         Code below modified from https://github.com/gong-xuan/FedKD/blob/master/dataset/data_cifar.py#L30
         """
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.validation_set = validation_set
         self.data = data
         self.num_classes = num_classes
         num_peers = len(sizes)
@@ -186,7 +186,10 @@ class DirichletDataPartitioner(DataPartitioner):
         split_arr = np.random.dirichlet([alpha] * num_peers, num_classes)
         self.logger.info(f"Split array: {split_arr}")
         for cls_idx in range(num_classes):
-            idx = np.where(np.asarray(data.targets) == cls_idx)[0]
+            if class_idx is not None:
+                idx = class_idx[cls_idx]
+            else:
+                idx = np.where(np.asarray(data.targets) == cls_idx)[0]
             totaln = idx.shape[0]
             idx_start = 0
             for i in range(num_peers):

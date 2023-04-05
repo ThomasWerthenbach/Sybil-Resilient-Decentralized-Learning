@@ -4,18 +4,19 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
+from ml.datasets.CelebA import Celeba
 from ml.datasets.dataset import Dataset
 from ml.models.model import Model
 
 
-class CNN(Model):
+class CelebA(Model):
     """
     Class for a CNN Model for Celeba
 
     """
 
     def get_dataset_class(self) -> Type[Dataset]:
-        raise NotImplementedError()
+        return Celeba
 
     def __init__(self):
         """

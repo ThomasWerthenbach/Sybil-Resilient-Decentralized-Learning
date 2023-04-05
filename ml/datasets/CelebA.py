@@ -7,13 +7,13 @@ from torch.utils.data import DataLoader
 
 from experiment_infrastructure.attacks.attack import Attack
 from ml.datasets.dataset import Dataset
-from ml.datasets.partitioner import DataPartitioner
+from ml.datasets.partitioner import DataPartitioner, DirichletDataPartitioner
 
 IMAGE_DIM = 84
 CHANNELS = 3
 NUM_CLASSES = 2
-TRAIN_FILE = "train/all_data_niid_1_keep_3_train_9.json"
-TEST_FILE = "test/all_data_niid_1_keep_3_test_9.json"
+TRAIN_FILE = "train/all_data_niid_0_train_9.json"
+TEST_FILE = "test/all_data_niid_0_test_9.json"
 
 class Celeba(Dataset):
 
@@ -32,31 +32,46 @@ class Celeba(Dataset):
 
     def get_peer_dataset(self, peer_id: int, total_peers: int, non_iid=False, sizes=None, batch_size=8, shuffle=False,
                          sybil_data_transformer: Attack = None) -> DataLoader:
+        if sizes is None:
+            sizes = [1.0 / total_peers for _ in range(total_peers)]
         _, _, train_data = self.__read_file__(
-            os.path.join(self.DEFAULT_DATA_DIR, "train/all_data_niid_1_keep_3_train_9.json"))
+            os.path.join(self.DEFAULT_DATA_DIR, TRAIN_FILE))
 
+        all_users = sorted(list(train_data.keys()))
+        peer_train_data = []
+        peer_train_data_labels = []
+        for user in all_users:
+            peer_train_data.extend(train_data[user]["x"])
+            peer_train_data_labels.extend(train_data[user]["y"])
         if non_iid:
-            # todo support dirichlet-based distribution as well
-            all_users = sorted(list(train_data.keys()))
-            user_peer_id = all_users[peer_id]
-            peer_train_data = train_data[user_peer_id]["x"]
-            peer_train_data_labels = train_data[user_peer_id]["y"]
-            all_train_data = self.process_x(peer_train_data)
-            all_train_data_labels = np.array(peer_train_data_labels)
-            train_set = list(zip(all_train_data, all_train_data_labels))
+            class_distribution = dict()
+            class_distribution[0] = np.where(np.array(peer_train_data_labels) == 0)[0]
+            class_distribution[1] = np.where(np.array(peer_train_data_labels) == 1)[0]
+            pre_train_set = DirichletDataPartitioner(list(zip(peer_train_data, peer_train_data_labels)),
+                                                     sizes,
+                                                     alpha=1,
+                                                     num_classes=2,
+                                                     class_idx=class_distribution).use(peer_id)
+
+            # class_distribution = dict()
+            # for i, user in enumerate(all_users):
+            #     class_distribution[i] = np.array(
+            #         list(range(len(peer_train_data), len(peer_train_data) + len(train_data[user]["y"]))))
+            #     peer_train_data.extend(train_data[user]["x"])
+            #     peer_train_data_labels.extend(train_data[user]["y"])
+            #
+            # pre_train_set = DirichletDataPartitioner(list(zip(peer_train_data, peer_train_data_labels)),
+            #                                          sizes,
+            #                                          num_classes=len(all_users),
+            #                                          class_idx=class_distribution).use(peer_id)
         else:
-            peer_train_data = []
-            peer_train_data_labels = []
-            for i in range(peer_id, len(train_data), total_peers):
-                peer_train_data.extend(train_data.values()[i]["x"])
-                peer_train_data_labels.extend(train_data.values()[i]["y"])
             pre_train_set = DataPartitioner(list(zip(peer_train_data, peer_train_data_labels)), sizes).use(peer_id)
-            train_x = []
-            train_y = []
-            for i in range(len(pre_train_set)):
-                train_x.append(pre_train_set[i][0])
-                train_y.append(pre_train_set[i][1])
-            train_set = list(zip(self.process_x(train_x), train_y))
+        train_x = []
+        train_y = []
+        for i in range(len(pre_train_set)):
+            train_x.append(pre_train_set[i][0])
+            train_y.append(pre_train_set[i][1])
+        train_set = list(zip(self.process_x(train_x), train_y))
         train = DataLoader(train_set, batch_size=batch_size, shuffle=shuffle)
 
         return train
@@ -202,7 +217,8 @@ class Celeba(Dataset):
 
         """
         x_batch = [self._load_image(i) for i in raw_x_batch]
-        return np.array(x_batch, dtype=np.dtype("float32")).reshape(-1, IMAGE_DIM, IMAGE_DIM, CHANNELS).transpose(0, 3, 1, 2)
+        return np.array(x_batch, dtype=np.dtype("float32")).reshape(-1, IMAGE_DIM, IMAGE_DIM, CHANNELS).transpose(0, 3,
+                                                                                                                  1, 2)
 
     def _load_image(self, img_name):
         """

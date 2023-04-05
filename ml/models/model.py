@@ -28,6 +28,6 @@ class Model(nn.Module, ABC):
             from ml.models.FashionMNIST import FashionMNIST
             return FashionMNIST
         elif name == 'CelebA':
-            from ml.models.Celeba import CNN
-            return CNN
+            from ml.models.Celeba import CelebA
+            return CelebA
         raise NotImplementedError(f"No model found for {name}")

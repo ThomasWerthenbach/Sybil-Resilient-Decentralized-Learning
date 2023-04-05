@@ -126,13 +126,17 @@ class Node(BaseNode):
             test_loss = 0
             test_corr = 0
             device_name = "cuda" if torch.cuda.is_available() else "cpu"
+            if self.settings.model == 'MNIST' or self.settings.model == 'FashionMNIST':
+                error = nn.NLLLoss(reduction='sum')
+            else:
+                error = nn.CrossEntropyLoss(reduction='sum')
             device = torch.device(device_name)
             self.model.to(device)
             for data, target in test_data:
                 target = target.type(torch.LongTensor)
                 data, target = data.to(device), target.to(device)
                 output = self.model(data)
-                test_loss += F.nll_loss(output, target, reduction='sum').item()
+                test_loss += error(output, target)
                 pred = output.argmax(dim=1, keepdim=True)
                 test_corr += pred.eq(target.view_as(pred)).sum().item()
             test_loss /= len(test_data)
@@ -151,7 +155,7 @@ class Node(BaseNode):
                 for data, target in attack_rate_data:
                     data, target = data.to(device), target.to(device)
                     output = self.model(data)
-                    test_loss += F.nll_loss(output, target, reduction='sum').item()
+                    test_loss += error(output, target)
                     pred = output.argmax(dim=1, keepdim=True)
                     test_corr += pred.eq(target.view_as(pred)).sum().item()
                 test_loss /= len(attack_rate_data)

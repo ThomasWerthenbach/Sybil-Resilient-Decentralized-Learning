@@ -18,7 +18,7 @@ class EMNISTDataset(Dataset):
             root=self.DEFAULT_DATA_DIR + '/train', train=True, download=True, transform=ToTensor(),
         ), batch_size=batch_size, shuffle=shuffle)
 
-    def get_peer_dataset(self, peer_id: int, total_peers: int, non_iid=False, sizes=None, batch_size=8, shuffle=False,
+    def get_peer_dataset(self, peer_id: int, total_peers: int, non_iid=False, sizes=None, batch_size=8, shuffle=True,
                          sybil_data_transformer: Attack = None):
         data = torchvision.datasets.EMNIST(
             split='balanced',

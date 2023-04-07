@@ -189,7 +189,9 @@ class DirichletDataPartitioner(DataPartitioner):
             if class_idx is not None:
                 idx = class_idx[cls_idx]
             else:
-                idx = np.where(np.asarray(data.targets) == cls_idx)[0]
+                labels = getattr(data, 'targets', getattr(data, 'labels', None))
+                assert labels is not None, "Dataset has no attribute targets or labels"
+                idx = np.where(np.asarray(labels) == cls_idx)[0]
             totaln = idx.shape[0]
             idx_start = 0
             for i in range(num_peers):

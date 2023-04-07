@@ -17,7 +17,7 @@ class SVHNDataset(Dataset):
             root=self.DEFAULT_DATA_DIR + '/train', split='train', download=True, transform=ToTensor(),
         ), batch_size=batch_size, shuffle=shuffle)
 
-    def get_peer_dataset(self, peer_id: int, total_peers: int, non_iid=False, sizes=None, batch_size=20, shuffle=False,
+    def get_peer_dataset(self, peer_id: int, total_peers: int, non_iid=False, sizes=None, batch_size=20, shuffle=True,
                          sybil_data_transformer: Attack = None):
         data = torchvision.datasets.SVHN(
             root=self.DEFAULT_DATA_DIR + '/train', split='train', download=True, transform=ToTensor(),

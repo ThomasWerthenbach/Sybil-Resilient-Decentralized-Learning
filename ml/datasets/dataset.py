@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from torch.utils.data import DataLoader
 
 from experiment_infrastructure.attacks.attack import Attack
+from ml.datasets.partitioner import DataPartitioner, DirichletDataPartitioner
 
 
 class Dataset(ABC):
@@ -28,3 +29,22 @@ class Dataset(ABC):
         """
         Function to load the test set
         """
+
+    def get_peer_train_set(self, data, peer_id, total_peers, non_iid, sizes, batch_size, shuffle,
+                           sybil_data_transformer):
+        self.logger.info(f"Initializing dataset of size {1.0 / total_peers} for peer {peer_id}. Non-IID: {non_iid}")
+        if sizes is None:
+            sizes = [1.0 / total_peers for _ in range(total_peers)]
+        if not non_iid:
+            train_set = DataPartitioner(data, sizes).use(peer_id)
+        else:
+            train_set = DirichletDataPartitioner(
+                data, sizes
+            ).use(peer_id)
+        if sybil_data_transformer is not None:
+            train_data = {key: [] for key in range(10)}
+            for x, y in data:
+                train_data[y].append(x)
+            train_set = sybil_data_transformer.transform_data(train_set, train_data, sizes, peer_id)
+
+        return DataLoader(train_set, batch_size=batch_size, shuffle=shuffle)

@@ -27,6 +27,12 @@ class Model(nn.Module, ABC):
             # FashionMNIST has the same dimensions as MNIST.
             from ml.models.FashionMNIST import FashionMNIST
             return FashionMNIST
+        elif name == 'SVHN':
+            from ml.models.SVHNLENET import LeNet
+            return LeNet
+        elif name == 'EMNIST':
+            from ml.models.EMNIST import EMNIST
+            return EMNIST
         elif name == 'CelebA':
             from ml.models.CelebA import CelebA
             return CelebA

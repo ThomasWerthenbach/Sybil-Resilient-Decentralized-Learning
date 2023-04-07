@@ -61,7 +61,7 @@ class BaseNode(ABC):
         optimizer = torch.optim.SGD(
             model.parameters(),
             lr=settings.learning_rate)
-        if settings.model == 'MNIST' or settings.model == 'FashionMNIST':
+        if settings.model in ['MNIST', 'FashionMNIST', 'EMNIST']:
             error = nn.NLLLoss()
         else:
             error = nn.CrossEntropyLoss()

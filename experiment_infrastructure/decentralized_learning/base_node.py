@@ -60,15 +60,14 @@ class BaseNode(ABC):
 
         optimizer = torch.optim.SGD(
             model.parameters(),
-            lr=settings.learning_rate,
-            momentum=settings.momentum)
+            lr=settings.learning_rate)
         if settings.model == 'MNIST' or settings.model == 'FashionMNIST':
             error = nn.NLLLoss()
         else:
             error = nn.CrossEntropyLoss()
 
         model.train()
-        self.logger.info(f"Training for {settings.epochs} epochs with dataset length: {len(dataset)}")
+        self.logger.info(f"Training for {settings.epochs} epochs with dataset length: {len(dataset)} and error class: {str(type(error))}")
         for _ in range(settings.epochs):
             for i, data in enumerate(dataset):
                 inputs, labels = data

@@ -11,11 +11,10 @@ from ml.datasets.partitioner import DataPartitioner, DirichletDataPartitioner
 
 IMAGE_DIM = 84
 CHANNELS = 3
-NUM_CLASSES = 2
-TRAIN_FILE = "train/all_data_niid_0_train_9.json"
-TEST_FILE = "test/all_data_niid_0_test_9.json"
+TRAIN_FILE = "train/all_data_niid_1_keep_3_train_9.json"
+TEST_FILE = "test/all_data_niid_1_keep_3_test_9.json"
 
-class Celeba(Dataset):
+class CelebADataset(Dataset):
 
     def all_training_data(self, batch_size=32, shuffle=False) -> DataLoader:
         _, _, train_data = self.__read_file__(
@@ -30,7 +29,7 @@ class Celeba(Dataset):
         all_train_data_labels = np.array(all_train_data_labels)
         return DataLoader(list(zip(all_train_data, all_train_data_labels)), batch_size=batch_size, shuffle=shuffle)
 
-    def get_peer_dataset(self, peer_id: int, total_peers: int, non_iid=False, sizes=None, batch_size=8, shuffle=False,
+    def get_peer_dataset(self, peer_id: int, total_peers: int, non_iid=False, sizes=None, batch_size=8, shuffle=True,
                          sybil_data_transformer: Attack = None) -> DataLoader:
         if sizes is None:
             sizes = [1.0 / total_peers for _ in range(total_peers)]
@@ -49,7 +48,7 @@ class Celeba(Dataset):
             class_distribution[1] = np.where(np.array(peer_train_data_labels) == 1)[0]
             pre_train_set = DirichletDataPartitioner(list(zip(peer_train_data, peer_train_data_labels)),
                                                      sizes,
-                                                     alpha=1,
+                                                     alpha=0.5,
                                                      num_classes=2,
                                                      class_idx=class_distribution).use(peer_id)
 
@@ -233,8 +232,3 @@ class Celeba(Dataset):
         img = Image.open(os.path.join(self.DEFAULT_DATA_DIR, "train/img_align_celeba", img_name))
         img = img.resize((IMAGE_DIM, IMAGE_DIM)).convert("RGB")
         return np.array(img)
-
-
-if __name__ == '__main__':
-    celeba = Celeba()
-    celeba.do_thing()

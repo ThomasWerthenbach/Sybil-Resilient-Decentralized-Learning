@@ -4,7 +4,7 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
-from ml.datasets.CelebA import Celeba
+from ml.datasets.CelebADataset import CelebADataset
 from ml.datasets.dataset import Dataset
 from ml.models.model import Model
 
@@ -16,7 +16,7 @@ class CelebA(Model):
     """
 
     def get_dataset_class(self) -> Type[Dataset]:
-        return Celeba
+        return CelebADataset
 
     def __init__(self):
         """

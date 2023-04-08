@@ -11,8 +11,8 @@ from ml.datasets.partitioner import DataPartitioner, DirichletDataPartitioner
 
 IMAGE_DIM = 84
 CHANNELS = 3
-TRAIN_FILE = "train/all_data_niid_1_keep_3_train_9.json"
-TEST_FILE = "test/all_data_niid_1_keep_3_test_9.json"
+TRAIN_FILE = "train/all_data_niid_0_train_9.json"
+TEST_FILE = "test/all_data_niid_0_test_9.json"
 
 class CelebADataset(Dataset):
 

@@ -1,4 +1,5 @@
 import json
+import time
 from collections import defaultdict
 from functools import reduce
 from operator import add
@@ -37,6 +38,7 @@ class ServerManager(Manager):
         self.settings = settings
         self.data = Model.get_model_class(settings.model)().get_dataset_class()().all_test_data(120)
         self.aggregator: Aggregator = Aggregator.get_aggregator_class(settings.aggregator)()
+        self.time_of_first_model_reception = 0
 
         if settings.sybil_attack:
             attack = Attack.get_attack_class(settings.sybil_attack_type)(settings)
@@ -56,6 +58,8 @@ class ServerManager(Manager):
             return
         self.rounds[r][host].append(p)
 
+        if self.time_of_first_model_reception == 0:
+            self.time_of_first_model_reception = time.time()
         self.expecting_models -= 1
 
         # Store model properly
@@ -76,12 +80,14 @@ class ServerManager(Manager):
 
         # Perform aggregation if all models are received
         if self.expecting_models == 0:
+            self.statistic_logger("time_between_receiving_first_model_and_aggregation", time.time() - self.time_of_first_model_reception)
+            self.time_of_first_model_reception = 0
             self.expecting_models = self.settings.total_hosts * self.settings.peers_per_host + self.settings.sybil_amount
             peers = list(self.models.keys())
             models = reduce(add, map(lambda x: list(self.models[x].values()), peers))
             history = reduce(add, map(lambda x: list(self.accumulated_update_history[x].values()), peers))
 
-            result = self.aggregator.aggregate(models, history)
+            result = self.aggregator.aggregate(None, None, models, history)
             self.previous_models = self.models
             self.models = defaultdict(dict)
 

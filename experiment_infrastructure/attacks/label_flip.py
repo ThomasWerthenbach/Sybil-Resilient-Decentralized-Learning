@@ -14,6 +14,8 @@ class LabelFlip(Attack):
         for x, y in eval_data.dataset:
             if y == self.f:
                 attack_data.append((x, self.t))
+            elif y == self.t:
+                attack_data.append((x, self.f))
         return DataLoader(attack_data, batch_size=120, shuffle=False)
 
     def __init__(self, settings: Settings, f: int = 0, t: int = 1, seed=42):
@@ -22,13 +24,15 @@ class LabelFlip(Attack):
         self.seed = seed
 
     def transform_data(self, data: Partition, trainset: Dict[object, List], sizes, peer_id) -> List:
-        all_targeted_train_data = list(map(lambda x: (x, self.t), trainset[self.f]))
+        all_targeted_train_data = list(map(lambda x: (x, self.t), trainset[self.f])) + list(map(lambda x: (x, self.f), trainset[self.t]))
 
         transformed_data = list()
         for i in range(len(data)):
             x, y = data[i]
             if y == self.f:
                 transformed_data.append((x, self.t))
+            elif y == self.t:
+                transformed_data.append((x, self.f))
             else:
                 transformed_data.append((x, y))
 

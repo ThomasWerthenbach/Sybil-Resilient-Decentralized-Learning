@@ -2,9 +2,9 @@ import time
 
 import numpy as np
 from ipv8.community import Community
+from numpy.linalg import norm
 
-from ml.models.EMNIST import EMNIST
-import sklearn.metrics.pairwise as smp
+from ml.models.CIFAR10LENET import LeNet
 
 
 class CosineEvalCommunity(Community):
@@ -49,22 +49,23 @@ class CosineEvalCommunity(Community):
         return 2500 * round_number + 250 * (self.peer_id - 1)  # peer_id is one-indexed
 
     async def start_lifecycle(self):
-        model_parameters = filter(lambda p: p.requires_grad, EMNIST().parameters())
+        model_parameters = filter(lambda p: p.requires_grad, LeNet().parameters())
         amount_of_param = sum([np.prod(p.size()) for p in model_parameters])
         self.logger.info(f"amount of trainable parameters: {amount_of_param}")
+
+        # Generate two random models
+        model1 = np.random.rand(amount_of_param)
+        model2 = np.random.rand(amount_of_param)
 
         r = 0
         while True:
             r += 1
 
-            # Create dummy data
-            models = list()
-            for _ in range(self.get_peer_amount(r)):
-                models.append(np.random.rand(amount_of_param))
-
-            # Perform execution
+            # Perform execution -> we simulate pairwise cosine similarity
             start = time.time()
-            smp.cosine_similarity(models)
+            for _ in range(self.get_peer_amount(r)):
+                for _ in range(self.get_peer_amount(r)):
+                    np.dot(model1, model2) / (norm(model1) * norm(model2))
             end = time.time()
 
             # Log results

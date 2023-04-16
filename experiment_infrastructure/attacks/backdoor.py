@@ -40,18 +40,24 @@ class Backdoor(Attack):
         tensor.mul_(0)
         tensor.add_(1)
 
-    def add_backdoor(self, tensor: Tensor):
+    def add_backdoor(self, tensors: Tensor):
         if self.settings.model == 'MNIST':
-            tensor = tensor[0]
+            tensors = [tensors[0]]
         if self.settings.model == 'FashionMNIST':
-            tensor = tensor[0]
-        # Add a square in the top left corner
-        self.change_value_to_1(tensor[0][0])
-        self.change_value_to_1(tensor[0][1])
-        self.change_value_to_1(tensor[0][2])
-        self.change_value_to_1(tensor[1][0])
-        self.change_value_to_1(tensor[1][1])
-        self.change_value_to_1(tensor[1][2])
-        self.change_value_to_1(tensor[2][0])
-        self.change_value_to_1(tensor[2][1])
-        self.change_value_to_1(tensor[2][2])
+            tensors = [tensors[0]]
+        if self.settings.model == 'CIFAR10':
+            tensors = [tensors[0], tensors[1], tensors[2]]
+        if self.settings.model == 'SVHN':
+            tensors = [tensors[0], tensors[1], tensors[2]]
+
+        for tensor in tensors:
+            # Add a square in the top left corner
+            self.change_value_to_1(tensor[0][0])
+            self.change_value_to_1(tensor[0][1])
+            self.change_value_to_1(tensor[0][2])
+            self.change_value_to_1(tensor[1][0])
+            self.change_value_to_1(tensor[1][1])
+            self.change_value_to_1(tensor[1][2])
+            self.change_value_to_1(tensor[2][0])
+            self.change_value_to_1(tensor[2][1])
+            self.change_value_to_1(tensor[2][2])

@@ -64,7 +64,6 @@ class Repple2(Aggregator):
             wv[(np.isinf(wv) + wv > 1)] = 1
             wv[(wv < 0)] = 0
 
-            print("aa", wv)
             # Add our own model, which we trust
             if own_model is not None:
                 wv = np.append(wv, 1)
@@ -72,8 +71,6 @@ class Repple2(Aggregator):
 
             # Ensure that sum of weights is 1
             wv = wv / np.sum(wv)
-
-            print("bbb", wv)
 
             # Apply the weight vector on this delta
             return WeightedMedian().weighted_median(models, wv)
@@ -110,8 +107,6 @@ class WeightedMedian:
         return self.weighted_median_2(values, weights)
 
     def weighted_median_2(self, values, weights):
-        print(values)
-        print(weights)
         i = np.argsort(values)
         c = np.cumsum(weights[i])
         return values[i[np.searchsorted(c, 0.5)]]

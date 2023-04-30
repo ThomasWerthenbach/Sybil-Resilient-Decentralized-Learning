@@ -28,13 +28,8 @@ class Krum(Aggregator):
         parameters = map(lambda x: list(x.parameters()), models)
         parameters = list(map(lambda x: list(map(lambda y: y.data.tolist(), x)), parameters))
 
-        # Calculate all pairwise euclidian distances
-        distances = self.calculate_distances(parameters)
-
         # Calculate the score for each model
-        scores = []
-        for i in range(len(parameters)):
-            scores.append(self.krum_score(i, distances))
+        scores = self.calculate_scores(parameters)
 
         # Select the model with the lowest score
         min_score = min(scores)
@@ -43,6 +38,16 @@ class Krum(Aggregator):
 
     def requires_gossip(self) -> bool:
         return False
+
+    def calculate_scores(self, parameters):
+        # Calculate all pairwise euclidian distances
+        distances = self.calculate_distances(parameters)
+
+        # Calculate the score for each model
+        scores = []
+        for i in range(len(parameters)):
+            scores.append(self.krum_score(i, distances))
+        return scores
 
     def calculate_distances(self, parameters):
         self.flatten_all(parameters)

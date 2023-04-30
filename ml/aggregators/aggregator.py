@@ -27,6 +27,9 @@ class Aggregator(ABC):
         elif name == 'repple3':
             from ml.aggregators.repple3 import Repple3
             return Repple3
+        elif name == 'repple4':
+            from ml.aggregators.repple4 import Repple4
+            return Repple4
         elif name == 'median':
             from ml.aggregators.median import Median
             return Median

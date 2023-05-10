@@ -80,7 +80,8 @@ class NodeManager(Manager):
                 # Honest node
                 dataset = model.get_dataset_class()().get_peer_dataset(node_id,
                                                                        settings.total_hosts * settings.peers_per_host,
-                                                                       settings.non_iid)
+                                                                       settings.non_iid,
+                                                                       alpha=settings.alpha)
                 self.nodes[node_id] = Node(model, dataset, settings, node_id)
 
                 all_peers = adjacency_matrix[node_id]

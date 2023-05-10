@@ -32,6 +32,7 @@ class NodeManager(Manager):
                                       # peer_id - 2, as peer_id's are 1-based and the server has id 1
                                       settings.total_hosts * settings.peers_per_host,
                                       settings.non_iid,
+                                      alpha=settings.alpha,
                                       sybil_data_transformer=Attack.get_attack_class(settings.sybil_attack_type)(settings))
                 self.nodes.append(Sybil(model, data, settings, i))
             else:
@@ -40,7 +41,8 @@ class NodeManager(Manager):
                     .get_peer_dataset(settings.peers_per_host * (peer_id - 2) + i,
                                       # peer_id - 2, as peer_id's are 1-based and the server has id 1
                                       settings.total_hosts * settings.peers_per_host,
-                                      settings.non_iid)
+                                      settings.non_iid,
+                                      alpha=settings.alpha)
                 self.nodes.append(Node(model, data, settings, i))
 
     def start_next_epoch(self) -> None:

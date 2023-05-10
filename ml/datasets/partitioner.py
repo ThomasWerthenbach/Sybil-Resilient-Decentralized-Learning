@@ -159,7 +159,7 @@ class DirichletDataPartitioner(DataPartitioner):
     Class to partition the dataset using Dirichlet Function
     """
 
-    def __init__(self, data, sizes=[1.0], seed=42, alpha=0.1, num_classes=10, class_idx = None):
+    def __init__(self, data, sizes=[1.0], seed=178, alpha=0.1, num_classes=10, class_idx = None):
         """
         Constructor. Partitions the data according the parameters
         Parameters

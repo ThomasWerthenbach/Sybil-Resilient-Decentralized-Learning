@@ -9,7 +9,7 @@ class Settings:
     # ML job settings
     non_iid: bool
     learning_rate: float
-    momentum: float
+    alpha: float
     model: str
     aggregator: str
     epochs: int

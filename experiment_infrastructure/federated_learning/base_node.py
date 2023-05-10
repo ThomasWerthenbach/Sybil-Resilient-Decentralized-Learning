@@ -44,8 +44,7 @@ class BaseNode(ABC):
 
         optimizer = torch.optim.SGD(
             model.parameters(),
-            lr=settings.learning_rate,
-            momentum=settings.momentum)
+            lr=settings.learning_rate)
 
         if settings.model in ['MNIST', 'FashionMNIST', 'EMNIST']:
             error = nn.NLLLoss()

@@ -18,7 +18,7 @@ class Dataset(ABC):
         """
 
     @abstractmethod
-    def get_peer_dataset(self, peer_id: int, total_peers: int, non_iid=False, sizes=None, batch_size=8, shuffle=True,
+    def get_peer_dataset(self, peer_id: int, total_peers: int, non_iid=False, sizes=None, batch_size=8, alpha=0.1, shuffle=True,
                          sybil_data_transformer: Attack = None) -> DataLoader:
         """
         Function to load the training set
@@ -30,16 +30,16 @@ class Dataset(ABC):
         Function to load the test set
         """
 
-    def get_peer_train_set(self, data, peer_id, total_peers, non_iid, sizes, batch_size, shuffle,
+    def get_peer_train_set(self, data, peer_id, total_peers, non_iid, sizes, batch_size, alpha, shuffle,
                            sybil_data_transformer):
-        self.logger.info(f"Initializing dataset of size {1.0 / total_peers} for peer {peer_id}. Non-IID: {non_iid}")
+        self.logger.info(f"Initializing dataset of size {1.0 / total_peers} for peer {peer_id}. Non-IID: {non_iid}. Alpha: {alpha}")
         if sizes is None:
             sizes = [1.0 / total_peers for _ in range(total_peers)]
         if not non_iid:
             train_set = DataPartitioner(data, sizes).use(peer_id)
         else:
             train_set = DirichletDataPartitioner(
-                data, sizes
+                data, sizes, alpha=alpha
             ).use(peer_id)
         if sybil_data_transformer is not None:
             train_data = {key: [] for key in range(10)}

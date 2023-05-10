@@ -33,7 +33,4 @@ class Model(nn.Module, ABC):
         elif name == 'EMNIST':
             from ml.models.EMNIST import EMNIST
             return EMNIST
-        elif name == 'CelebA':
-            from ml.models.CelebA import CelebA
-            return CelebA
         raise NotImplementedError(f"No model found for {name}")

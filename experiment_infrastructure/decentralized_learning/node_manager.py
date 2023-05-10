@@ -67,6 +67,7 @@ class NodeManager(Manager):
                     .get_peer_dataset(node_id,
                                       settings.total_hosts * settings.peers_per_host,
                                       settings.non_iid,
+                                      alpha=settings.alpha,
                                       sybil_data_transformer=Attack.get_attack_class(settings.sybil_attack_type)(settings))
                 self.nodes[node_id] = Sybil(model, dataset, settings, node_id)
 

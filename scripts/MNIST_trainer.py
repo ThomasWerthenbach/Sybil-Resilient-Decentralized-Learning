@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 from torchvision.transforms import ToTensor
 import torch.nn.functional as F
 
-from ml.models.FasterMNIST import MNIST
+from ml.models.MNIST import MNIST
 
 
 # class Network(nn.Module):

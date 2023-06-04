@@ -10,6 +10,7 @@ from ml.datasets.dataset import Dataset
 
 class CIFAR10Dataset(Dataset):
     def __init__(self):
+        super().__init__()
         self.logger = logging.getLogger(self.__class__.__name__)
 
     def all_training_data(self, batch_size=32, shuffle=False) -> DataLoader:

@@ -18,19 +18,15 @@ class Model(nn.Module, ABC):
     @staticmethod
     def get_model_class(name: str) -> Type['Model']:
         if name == 'MNIST':
-            from ml.models.FasterMNIST import MNIST
+            from ml.models.MNIST import MNIST
             return MNIST
         elif name == 'CIFAR10':
-            from ml.models.CIFAR10LENET import LeNet
+            from ml.models.CIFAR10 import LeNet
             return LeNet
         elif name == 'FashionMNIST':
-            # FashionMNIST has the same dimensions as MNIST.
             from ml.models.FashionMNIST import FashionMNIST
             return FashionMNIST
         elif name == 'SVHN':
-            from ml.models.SVHNLENET import LeNet
+            from ml.models.SVHN import LeNet
             return LeNet
-        elif name == 'EMNIST':
-            from ml.models.EMNIST import EMNIST
-            return EMNIST
         raise NotImplementedError(f"No model found for {name}")

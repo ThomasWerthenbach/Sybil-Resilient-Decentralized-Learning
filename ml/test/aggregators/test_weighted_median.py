@@ -3,10 +3,10 @@ from unittest import TestCase
 import torch
 from torch import nn, Tensor
 
-from ml.aggregators.repple2 import WeightedMedian, Repple2
+from ml.aggregators.sybilwall_weighted_median import WeightedMedian, SybilWallWeightedMedian
 
 
-class TestRepple(TestCase):
+class TestSybilWallWeightedMedian(TestCase):
     def test_similar(self):
         a = nn.Linear(2, 2)
         b = nn.Linear(2, 2)
@@ -86,7 +86,7 @@ class TestRepple(TestCase):
                 p.mul_(0)
                 p.add_(Tensor([1, -1]))
 
-        res = Repple2().aggregate(None, None, [a, b], [a, b, c])
+        res = SybilWallWeightedMedian().aggregate(None, None, [a, b], [a, b, c])
 
         expected = [
             Tensor([[0, 1], [0, 1]]),

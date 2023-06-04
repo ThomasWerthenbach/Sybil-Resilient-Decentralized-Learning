@@ -13,11 +13,12 @@ class FoolsGold(Aggregator):
     """
     C. Fung, C. J. M. Yoon, and I. Beschastnikh, “Mitigating sybils in federated learning poisoning,” CoRR,
     vol. abs/1808.04866, 2018. [Online]. Available: https://arxiv.org/abs/1808.04866
+
+    Parts of code adopted from https://github.com/DistributedML/FoolsGold
     """
 
     def requires_gossip(self) -> bool:
         return False
-
 
 
     def aggregate(self, own_model: nn.Module, own_history: nn.Module, models: List[nn.Module], history: List[nn.Module],

@@ -9,7 +9,11 @@ from ml.aggregators.aggregator import Aggregator
 from ml.aggregators.util import weighted_average
 
 
-class Repple(Aggregator):
+class SybilWall(Aggregator):
+    """
+    Parts of code adopted from https://github.com/DistributedML/FoolsGold
+    """
+
     def requires_gossip(self) -> bool:
         return True
 

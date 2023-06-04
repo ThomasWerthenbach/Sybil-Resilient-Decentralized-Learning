@@ -1,6 +1,5 @@
 import logging
 from random import Random
-from typing import Dict, List
 
 import numpy as np
 
@@ -106,53 +105,6 @@ class DataPartitioner(object):
 
         """
         return Partition(self.data, self.partitions[rank])
-
-
-class KShardDataPartitioner(DataPartitioner):
-    """
-    Class to partition the dataset
-
-    """
-
-    def __init__(self, data, sizes, shards=1, seed=1234):
-        """
-        Constructor. Partitions the data according the parameters
-
-        Parameters
-        ----------
-        data : indexable
-            An indexable list of data items
-        sizes : list(float)
-            A list of fractions for each process
-        shards : int
-            Number of shards to allot to process
-        seed : int, optional
-            Seed for generating a random subset
-
-        """
-        self.data = data
-        self.partitions = []
-        data_len = len(data)
-        indexes = [x for x in range(0, data_len)]
-        rng = Random()
-        rng.seed(seed)
-
-        for frac in sizes:
-            self.partitions.append([])
-            for _ in range(shards):
-                start = rng.randint(0, len(indexes) - 1)
-                part_len = int(frac * data_len) // shards
-                if start + part_len > len(indexes):
-                    self.partitions[-1].extend(indexes[start:])
-                    self.partitions[-1].extend(
-                        indexes[: (start + part_len - len(indexes))]
-                    )
-                    indexes = indexes[(start + part_len - len(indexes)) : start]
-                else:
-                    self.partitions[-1].extend(indexes[start : start + part_len])
-                    index_start = indexes[:start]
-                    index_start.extend(indexes[start + part_len :])
-                    indexes = index_start
 
 class DirichletDataPartitioner(DataPartitioner):
     """

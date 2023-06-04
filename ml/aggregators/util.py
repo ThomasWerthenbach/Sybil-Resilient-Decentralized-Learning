@@ -8,6 +8,8 @@ from torch import nn
 def weighted_average(models: List[nn.Module], weights: List[float]) -> nn.Module:
     """
     Calculates the weighted average
+
+    Parts of code adopted from https://github.com/devos50/decentralized-learning
     """
     assert sum(weights) - 1 < 1e-5, "Weights should sum to 1"
 

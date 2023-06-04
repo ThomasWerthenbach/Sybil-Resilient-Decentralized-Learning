@@ -7,6 +7,10 @@ from ml.datasets.partitioner import Partition
 
 
 class Attack(ABC):
+    """
+    Abstract base class for all attacks
+    """
+
     def __init__(self, settings):
         pass
 

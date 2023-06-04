@@ -1,5 +1,7 @@
 import json
 import os
+import sys
+
 from typing import List
 
 import torch
@@ -20,9 +22,13 @@ models = list()
 def send_model(info: bytes, model: bytes):
     global models
     models.append(deserialize_model(model, s))
-
+    
 
 if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        print("Please provide the path to the test data directory as the first argument.")
+        sys.exit(1)
+
     filename = os.path.join(os.path.dirname(__file__),
                             'settings.json')
     with open(filename) as f:
@@ -33,8 +39,9 @@ if __name__ == '__main__':
     for i in range(s.total_hosts):
         hosts.append(NodeManager(s, i + 1, send_model))
 
+
     data = torchvision.datasets.MNIST(
-        root='C:\\Users\\takwe\\tu\\Repple\\data\\test', train=False, download=True, transform=ToTensor()
+        root=sys.argv[1], train=False, download=True, transform=ToTensor()
     )
     test_data = DataLoader(data, batch_size=120, shuffle=False)
 

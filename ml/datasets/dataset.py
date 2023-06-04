@@ -1,4 +1,5 @@
 import os
+import logging
 from abc import ABC, abstractmethod
 
 from torch.utils.data import DataLoader
@@ -10,6 +11,9 @@ from ml.datasets.partitioner import DataPartitioner, DirichletDataPartitioner
 class Dataset(ABC):
     NUM_CLASSES = None
     DEFAULT_DATA_DIR = os.path.join(os.path.dirname(__file__), '../../../data')
+
+    def __init__(self):
+        self.logger = logging.getLogger(self.__class__.__name__)
 
     @abstractmethod
     def all_training_data(self, batch_size=32, shuffle=False) -> DataLoader:

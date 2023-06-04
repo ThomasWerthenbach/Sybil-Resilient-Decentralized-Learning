@@ -7,10 +7,15 @@ import torch
 from torch import nn
 
 from ml.aggregators.aggregator import Aggregator
+from ml.aggregators.krum import Krum
 from ml.aggregators.util import weighted_average
 
 
-class Repple2(Aggregator):
+class SybilWallKrumFilter(Aggregator):
+    """
+    Parts of code adopted from https://github.com/DistributedML/FoolsGold
+    """
+
     def requires_gossip(self) -> bool:
         return True
 
@@ -64,6 +69,15 @@ class Repple2(Aggregator):
             wv[(np.isinf(wv) + wv > 1)] = 1
             wv[(wv < 0)] = 0
 
+            if len(models) > 1:
+                parameters = map(lambda x: list(x.parameters()), models)
+                parameters = list(map(lambda x: list(map(lambda y: y.data.tolist(), x)), parameters))
+                krum = Krum(f=1)
+                scores = krum.calculate_scores(parameters)
+                max_score = max(scores)
+                max_score_index = scores.index(max_score)
+                wv[max_score_index] = 0
+
             # Add our own model, which we trust
             if own_model is not None:
                 wv = np.append(wv, 1)
@@ -73,40 +87,4 @@ class Repple2(Aggregator):
             wv = wv / np.sum(wv)
 
             # Apply the weight vector on this delta
-            return WeightedMedian().weighted_median(models, wv)
-
-
-class WeightedMedian:
-    def weighted_median(self, models: List[nn.Module], weights):
-        device = torch.device("cpu")
-        with torch.no_grad():
-            result = copy.deepcopy(models[0])
-            result.to(device)
-            for p in result.parameters():
-                p.mul_(0)
-            for model in models:
-                model.to(device)
-
-            parameters = np.array(list(map(lambda x: list(x.parameters()), models)), dtype=object)
-            for i in range(len(parameters[0])):
-                self.recursive_weighted_medians(parameters[:, i], (), np.array(weights), list(result.parameters())[i])
-        return result
-
-    def recursive_weighted_medians(self, parameters, index_tuple, weights, result_params):
-        p = parameters[0][index_tuple]
-        for i in range(len(p)):
-            if len(p[i].shape) == 0:
-                # Scalar. We can now compute the weighted median
-                result_params[index_tuple][i].add_(self.compute_weighted_median(parameters, index_tuple + (i,), weights))
-            else:
-                # Not a scalar. Recurse
-                self.recursive_weighted_medians(parameters, index_tuple + (i,), weights, result_params)
-
-    def compute_weighted_median(self, parameters, index_tuple, weights):
-        values = list(map(lambda x: x[index_tuple].item(), parameters))
-        return self.weighted_median_2(values, weights)
-
-    def weighted_median_2(self, values, weights):
-        i = np.argsort(values)
-        c = np.cumsum(weights[i])
-        return values[i[np.searchsorted(c, 0.5)]]
+            return weighted_average(models, wv)

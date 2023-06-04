@@ -2,13 +2,15 @@ from typing import List
 
 from torch import nn
 
-from ml.aggregators.aggregator import Aggregator
 from ml.aggregators.krum import Krum
 from ml.aggregators.util import weighted_average
 
 
 class MultiKrum(Krum):
     """
+    P. Blanchard, E. M. El Mhamdi, R. Guerraoui, and J. Stainer, “Machine learning with adversaries: Byzantine tolerant gradient descent,”
+    in Advances in Neural Information Processing Systems, I. Guyon, U. V. Luxburg, S. Bengio, H. Wallach, R. Fergus,
+    S. Vishwanathan, and R. Garnett, Eds., vol. 30. Curran Associates, Inc., 2017. [Online]. Available:
     https://proceedings.neurips.cc/paper_files/paper/2017/file/f4b9ec30ad9f68f89b29639786cb62ef-Paper.pdf
     """
     def __init__(self, f: int = 1, m: int = 3):

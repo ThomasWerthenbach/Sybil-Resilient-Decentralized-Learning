@@ -18,18 +18,18 @@ class Aggregator(ABC):
         elif name == 'foolsgold':
             from ml.aggregators.foolsgold import FoolsGold
             return FoolsGold
-        elif name == 'repple':
-            from ml.aggregators.repple import Repple
-            return Repple
-        elif name == 'repple2':
-            from ml.aggregators.repple2 import Repple2
-            return Repple2
-        elif name == 'repple3':
-            from ml.aggregators.repple3 import Repple3
-            return Repple3
-        elif name == 'repple4':
-            from ml.aggregators.repple4 import Repple4
-            return Repple4
+        elif name == 'sybilwall':
+            from ml.aggregators.sybilwall import SybilWall
+            return SybilWall
+        elif name == 'sybilwall_weighted_median':
+            from ml.aggregators.sybilwall_weighted_median import SybilWallWeightedMedian
+            return SybilWallWeightedMedian
+        elif name == 'sybilwall_krum':
+            from ml.aggregators.sybilwall_krum_filter import SybilWallKrumFilter
+            return SybilWallKrumFilter
+        elif name == 'sybilwall_median':
+            from ml.aggregators.sybilwall_median import SybilWallMedian
+            return SybilWallMedian
         elif name == 'median':
             from ml.aggregators.median import Median
             return Median

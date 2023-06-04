@@ -1,11 +1,11 @@
 import random
-from typing import List, Dict
 
 from torch.utils.data import DataLoader
+from typing import List, Dict
 
 from experiment_infrastructure.attacks.attack import Attack
 from experiment_infrastructure.experiment_settings.settings import Settings
-from ml.datasets.partitioner import Partition, DataPartitioner
+from ml.datasets.partitioner import Partition
 
 
 class LabelFlip(Attack):

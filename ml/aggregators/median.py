@@ -10,7 +10,9 @@ from ml.aggregators.util import weighted_average
 
 class Median(Aggregator):
     """
-    http://proceedings.mlr.press/v80/yin18a/yin18a.pdf
+    D. Yin, Y. Chen, K. Ramchandran, and P. L. Bartlett, “Byzantine-robust distributed learning: Towards optimal statistical
+    rates,” CoRR, vol. abs/1803.01498, 2018. [Online]. Available:
+    http://arxiv.org/abs/1803.01498
     """
     def aggregate(self, own_model: nn.Module, own_history: nn.Module, models: List[nn.Module],
                   delta_history: List[nn.Module], relevant_weights: List[int] = None) -> nn.Module:

@@ -1,14 +1,14 @@
 {
   "non_iid": true,
-  "learning_rate": 0.01,
-  "momentum": 0.5,
-  "model": "FashionMNIST",
-  "aggregator": "repple",
-  "epochs": 3,
+  "learning_rate": 0.004,
+  "alpha": 0.1,
+  "model": "SVHN",
+  "aggregator": "average",
+  "epochs": 1,
   "total_hosts": 1,
-  "peers_per_host": 5,
-  "network_layout": "4_sybil",
+  "peers_per_host": 1,
+  "network_layout": "1",
   "sybil_amount": 3,
-  "sybil_attack": true,
-  "sybil_attack_type": "backdoor"
+  "sybil_attack": false,
+  "sybil_attack_type": "label_flip"
 }

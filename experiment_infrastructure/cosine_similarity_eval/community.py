@@ -4,7 +4,7 @@ import numpy as np
 from ipv8.community import Community
 from numpy.linalg import norm
 
-from ml.models.CIFAR10LENET import LeNet
+from ml.models.CIFAR10 import LeNet
 
 
 class CosineEvalCommunity(Community):
@@ -29,24 +29,7 @@ class CosineEvalCommunity(Community):
         self.register_task("start_lifecycle_" + str(peer_id), self.start_lifecycle, delay=0)
 
     def get_peer_amount(self, round_number: int) -> int:
-        """
-        Generates number of peers to simulate.
-
-        For node with id 1, the sequence will be:
-        2500
-        5000
-        7500
-        10000
-
-        For node with id 2, the sequence will be:
-        2750
-        5250
-        7750
-        10250
-
-        Suitable for 10 nodes.
-        """
-        return 2500 * round_number + 250 * (self.peer_id - 1)  # peer_id is one-indexed
+        return 2500 * round_number
 
     async def start_lifecycle(self):
         model_parameters = filter(lambda p: p.requires_grad, LeNet().parameters())

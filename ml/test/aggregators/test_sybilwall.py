@@ -3,10 +3,10 @@ from unittest import TestCase
 import torch
 from torch import nn, Tensor
 
-from ml.aggregators.repple import Repple
+from ml.aggregators.sybilwall import SybilWall
 
 
-class TestRepple(TestCase):
+class TestSybilWall(TestCase):
     def test_similar(self):
         a = nn.Linear(2, 2)
         b = nn.Linear(2, 2)
@@ -22,7 +22,7 @@ class TestRepple(TestCase):
                 p.mul_(0)
                 p.add_(Tensor([1, -1]))
 
-        res = Repple().aggregate(None, None, [a, b, c], [a, b, c])
+        res = SybilWall().aggregate(None, None, [a, b, c], [a, b, c])
 
         expected = [
             Tensor([[0, 1], [0, 1]]),
@@ -48,7 +48,7 @@ class TestRepple(TestCase):
                 p.mul_(0)
                 p.add_(Tensor([0, -1]))
 
-        res = Repple().aggregate(None, None, [a, b, c], [a, b, c])
+        res = SybilWall().aggregate(None, None, [a, b, c], [a, b, c])
 
         expected = [
             Tensor([[1/3, 0], [1/3, 0]]),
@@ -75,7 +75,7 @@ class TestRepple(TestCase):
                 p.mul_(0)
                 p.add_(Tensor([1, -1]))
 
-        res = Repple().aggregate(None, None, [a, b], [a, b, c])
+        res = SybilWall().aggregate(None, None, [a, b], [a, b, c])
 
         expected = [
             Tensor([[0, 1], [0, 1]]),

@@ -10,7 +10,11 @@ from ml.aggregators.median import Median
 from ml.aggregators.util import weighted_average
 
 
-class Repple4(Aggregator):
+class SybilWallMedian(Aggregator):
+    """
+    Parts of code adopted from https://github.com/DistributedML/FoolsGold
+    """
+
     def requires_gossip(self) -> bool:
         return True
 
@@ -60,7 +64,7 @@ class Repple4(Aggregator):
 
             filtered_models = []
             for i in range(len(wv)):
-                if wv[i] > 0.5: # todo magic number should be parameter
+                if wv[i] > 0.5:
                     filtered_models.append(models[i])
 
             # Compute median

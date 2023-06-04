@@ -13,6 +13,8 @@ class LeNet(Model):
     """
     Class for a LeNet Model for CIFAR10
     Inspired by original LeNet network for MNIST: https://ieeexplore.ieee.org/abstract/document/726791
+
+    Code adopted from https://github.com/devos50/decentralized-learning
     """
 
     def get_dataset_class(self) -> Type[Dataset]:

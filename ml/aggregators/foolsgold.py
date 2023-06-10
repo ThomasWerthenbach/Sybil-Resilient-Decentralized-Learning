@@ -20,49 +20,55 @@ class FoolsGold(Aggregator):
     def requires_gossip(self) -> bool:
         return False
 
+    def aggregate(self, own_model: nn.Module, own_history: nn.Module, models: List[nn.Module], history: List[nn.Module]):
+        if own_model is not None:
+            models = models + [own_model]
+            history = history + [own_history]
 
-    def aggregate(self, own_model: nn.Module, own_history: nn.Module, models: List[nn.Module], history: List[nn.Module],
-                  relevant_parameter_indices: List[int] = None):
         with torch.no_grad():
-            if own_model is not None:
-                models = models + [own_model]
-                history = history + [own_history]
-            parameters = map(lambda x: list(x.parameters()), history)
-            parameters = list(map(lambda x: list(map(lambda y: y.data.tolist(), x)), parameters))
+            weights = self.compute_similarity_score(history)
 
-            self.flatten_all(parameters)
+            # Weight normalization (sum of weights is 1)
+            weights /= np.sum(weights)
 
-            if relevant_parameter_indices:
-                relevant_parameters = list(map(lambda x: x[relevant_parameter_indices], parameters))
-            else:
-                relevant_parameters = parameters
+            # Weighted average based on the similarity scores.
+            return weighted_average(models, weights)
 
-            cs = smp.cosine_similarity(relevant_parameters) - np.eye(len(history))
+    @staticmethod
+    def compute_similarity_score(history: List[nn.Module]):
+        """
+        This function represents the main FoolsGold inspired component used within SybilWall.
 
-            max_cs = np.max(cs, axis=1) + 1e-5
-            for i in range(len(history)):
-                for j in range(len(history)):
-                    if i == j:
-                        continue
-                    if max_cs[i] < max_cs[j]:
-                        cs[i][j] = cs[i][j] * max_cs[i] / max_cs[j]
+        Computes the similarity score based on the FoolsGold algorithm.
+        """
+        parameters = map(lambda x: list(x.parameters()), history)
+        parameters = list(map(lambda x: list(map(lambda y: y.data.tolist(), x)), parameters))
 
-            wv = 1 - (np.max(cs, axis=1))
+        Aggregator.flatten_all(parameters)
 
-            wv[wv > 1] = 1
-            wv[wv < 0] = 0
+        # Compute similarity matrix
+        similarity = smp.cosine_similarity(parameters)
+        similarity -= np.eye(len(history))
 
-            # Rescale so that max value is wv
-            wv = wv / np.max(wv)
-            wv[(wv == 1)] = .99
+        # Apply pardoning (see FoolsGold paper)
+        maximum_similarity = np.max(similarity, axis=1) + 1e-5
+        for i in range(len(history)):
+            for j in list(range(0, i)) + list(range(i + 1, len(history))):
+                if maximum_similarity[i] < maximum_similarity[j]:
+                    similarity[i][j] *= maximum_similarity[i] / maximum_similarity[j]
 
-            # Logit function
-            wv = (np.log((wv / (1 - wv)) + 1e-5) + 0.5)
-            wv[(np.isinf(wv) + wv > 1)] = 1
-            wv[(wv < 0)] = 0
+        # Compute new maximum weights
+        weights = 1 - np.max(similarity, axis=1)
 
-            # Ensure that sum of weights is 1
-            wv = wv / np.sum(wv)
+        # Clip weights
+        weights = np.clip(weights, 0, 1)
 
-            # Apply the weight vector on this delta
-            return weighted_average(models, wv)
+        # Rescale weights
+        weights = weights / np.max(weights)
+
+        # Logit function
+        weights = np.log(weights / (1 - weights)) + 0.5
+
+        # Clip weights.
+        # Note that np.clip handles +inf and -inf.
+        return np.clip(weights, 0, 1)

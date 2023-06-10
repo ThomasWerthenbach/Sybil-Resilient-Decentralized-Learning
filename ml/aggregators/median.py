@@ -15,7 +15,7 @@ class Median(Aggregator):
     http://arxiv.org/abs/1803.01498
     """
     def aggregate(self, own_model: nn.Module, own_history: nn.Module, models: List[nn.Module],
-                  delta_history: List[nn.Module], relevant_weights: List[int] = None) -> nn.Module:
+                  history: List[nn.Module]) -> nn.Module:
         if own_model is not None:
             models = [own_model] + models
         if len(models) == 1:

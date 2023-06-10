@@ -6,8 +6,7 @@ from torch import nn
 
 class Aggregator(ABC):
     @abstractmethod
-    def aggregate(self, own_model: nn.Module, own_history: nn.Module, models: List[nn.Module], delta_history: List[nn.Module],
-                  relevant_weights: List[int] = None) -> nn.Module:
+    def aggregate(self, own_model: nn.Module, own_history: nn.Module, models: List[nn.Module], history: List[nn.Module]) -> nn.Module:
         pass
 
     @staticmethod
@@ -45,7 +44,8 @@ class Aggregator(ABC):
     def requires_gossip(self) -> bool:
         ...
 
-    def flatten_one_layer(self, l: List) -> List:
+    @staticmethod
+    def flatten_one_layer(l: List) -> List:
         flat_list = []
         for sublist in l:
             if type(sublist) == list:
@@ -55,7 +55,8 @@ class Aggregator(ABC):
                 flat_list.append(sublist)
         return flat_list
 
-    def flatten_all(self, parameters):
+    @staticmethod
+    def flatten_all(parameters):
         for i in range(len(parameters)):
             while len(parameters[i]) > 0 and any(map(lambda x: type(x) == list, parameters[i])):
-                parameters[i] = self.flatten_one_layer(parameters[i])
+                parameters[i] = Aggregator.flatten_one_layer(parameters[i])
